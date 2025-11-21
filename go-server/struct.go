@@ -137,33 +137,33 @@ func GameEnded(table *s_table, player []string) string {
 			} else { count_v = 0 }
 		}
 
-		count_rd := 0
-		count_dd := 0
-		checkfor_d := 10 + 5
-		count_d := 1
-		for i := 10; i < size - 10; i++ {
-			if i == checkfor_d {
-				fmt.Println("count_dd:", count_dd, " count_rd:", count_rd)
-				count_dd = 0
-				count_rd = 0
-				checkfor_d += 5 + count_d
-				count_d++
-			}
+		// count_rd := 0
+		// count_dd := 0
+		// checkfor_d := 10 + 5
+		// count_d := 1
+		// for i := 10; i < size - 10; i++ {
+		// 	if i == checkfor_d {
+		// 		fmt.Println("count_dd:", count_dd, " count_rd:", count_rd)
+		// 		count_dd = 0
+		// 		count_rd = 0
+		// 		checkfor_d += 5 + count_d
+		// 		count_d++
+		// 	}
 
-			// Diagonal Descending
-			if table.dd_cells[i] == color {
-				count_dd++
-				if count_dd >= 5 { return color }
-			} else { count_dd = 0 }
+		// 	// Diagonal Descending
+		// 	if table.dd_cells[i] == color {
+		// 		count_dd++
+		// 		if count_dd >= 5 { return color }
+		// 	} else { count_dd = 0 }
 
-			// Diagonal Rising
-			if table.rd_cells[i] == color {
-				count_rd++
-				if count_rd >= 5 { return color }
-			} else { count_rd = 0 }		
-		}
+		// 	// Diagonal Rising
+		// 	if table.rd_cells[i] == color {
+		// 		count_rd++
+		// 		if count_rd >= 5 { return color }
+		// 	} else { count_rd = 0 }		
+		// }
 
-		fmt.Println("--------")
+		// fmt.Println("--------")
 	}
 	return "n"
 }

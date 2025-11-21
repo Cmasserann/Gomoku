@@ -7,27 +7,48 @@ import (
 	"strings"
 )
 
+
+var table = s_table{ size: 19}
+
+
 func RunServer() {
 	fmt.Println("Server is running...")
 
-	ln, _ := net.Listen("tcp", ":8080")
+	ln, err := net.Listen("tcp", ":8080")
 
-	conn, _ := ln.Accept()
-
+	if err != nil {
+		fmt.Println("Error starting server:", err)
+		return
+	}
+	defer ln.Close()
+	
 	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection:", err)
+			continue
+		}
+
 		message, _ := bufio.NewReader(conn).ReadString('\n')
 		fmt.Print("Message Received:", string(message))
 
-        newmessage := strings.ToUpper(message)
+		data := tableToDict(&table)
+		newmessage := fmt.Sprintf("%v", data)
+		newmessage = strings.TrimSpace(newmessage)
+		fmt.Print("Sending data:", newmessage)
 
 		conn.Write([]byte(newmessage + "\n"))
-		return
+		break
 	}
 }
 
 func init() {
 	fmt.Println("Initializing server...")
-	table := s_table{ size: 19}
+
+}
+
+func test() {
+	// table := s_table{ size: 19}
 	// putStone(&table, 3, 3, "w")
 	// // putStone(&table, 6, 6, "w")
 	// putStone(&table, 6, 5, "w")
@@ -76,8 +97,10 @@ func init() {
 	fmt.Println("Test verifWinPoint b :", test)
 	test = verifWinPoint(&table, 6, 4, "w")
 	fmt.Println("Test verifWinPoint w :", test)
-
 }
 
 func main() {
+	test()
+	
+	RunServer()
 }
