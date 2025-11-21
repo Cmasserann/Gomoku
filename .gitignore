@@ -1,0 +1,3 @@
+*.pyc
+*/bin/*
+client-ncurses/.client-ncurses/*
