@@ -1,3 +1,4 @@
 *.pyc
 */bin/*
 client-ncurses/.client-ncurses/*
+go-server/cover.out
