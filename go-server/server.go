@@ -27,7 +27,10 @@ func RunServer() {
 
 func init() {
 	fmt.Println("Initializing server...")
-	table := s_table{ size: 19}
+
+}
+
+func test() {
 	// putStone(&table, 3, 3, "w")
 	// // putStone(&table, 6, 6, "w")
 	// putStone(&table, 6, 5, "w")
@@ -73,11 +76,13 @@ func init() {
 	fmt.Println("Game Ended:", end)
 
 	test := verifWinPoint(&table, 16, 16, "b")
-	fmt.Println("Test verifWinPoint b :", test)
-	test = verifWinPoint(&table, 6, 4, "w")
-	fmt.Println("Test verifWinPoint w :", test)
-
+	fmt.Println("Test verifWinPoint b 16 16:", test)
+	test = verifWinPoint(&table, 6, 6, "w")
+	fmt.Println("Test verifWinPoint w 6 6:", test)
 }
 
 func main() {
+	test()
+	
+	// RunServer()
 }
