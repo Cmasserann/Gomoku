@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var table = s_table{ size: 19, captured_b: 0, captured_w: 0 }
+
 func RunServer() {
 	fmt.Println("Server is running...")
 
@@ -31,58 +33,76 @@ func init() {
 }
 
 func test() {
-	// putStone(&table, 3, 3, "w")
-	// // putStone(&table, 6, 6, "w")
-	// putStone(&table, 6, 5, "w")
-	// putStone(&table, 6, 4, "w")
-	// putStone(&table, 6, 3, "w")
-	// putStone(&table, 6, 2, "w")
+	fmt.Println("Test verifWinPoint")
+	fmt.Println("-------------------")
+	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
+	putStone(&test_table, 14, 16, "b")
+	// putStone(&test_table, 15, 16, "b")
+	putStone(&test_table, 16, 16, "b")
+	putStone(&test_table, 17, 16, "b")
+	putStone(&test_table, 18, 16, "b")
+	putStone(&test_table, 0, 17, "b")
+	putStone(&test_table, 1, 17, "b")
+	putStone(&test_table, 2, 17, "b")
 
-	putStone(&table, 14, 16, "b")
-	// putStone(&table, 15, 16, "b")
-	putStone(&table, 16, 16, "b")
-	putStone(&table, 17, 16, "b")
-	putStone(&table, 18, 16, "b")
-	putStone(&table, 0, 17, "b")
-	putStone(&table, 1, 17, "b")
-	putStone(&table, 2, 17, "b")
+	putStone(&test_table, 5, 5, "w")
+	putStone(&test_table, 6, 6, "w")
+	putStone(&test_table, 7, 7, "w")
+	putStone(&test_table, 8, 8, "w")
+	putStone(&test_table, 9, 9, "w")
 
+	putStone(&test_table, 8, 12, "b")
+	putStone(&test_table, 7, 13, "b")
+	putStone(&test_table, 6, 14, "b")
+	putStone(&test_table, 5, 15, "b")
+	putStone(&test_table, 4, 16, "b")
 
-	putStone(&table, 18, 18, "dd")
-	putStone(&table, 0, 0, "dd")
-	putStone(&table, 0, 18, "rd")
-	putStone(&table, 18, 0, "rd")
-	
-	
-	putStone(&table, 5, 5, "w")
-	putStone(&table, 6, 6, "w")
-	putStone(&table, 7, 7, "w")
-	putStone(&table, 8, 8, "w")
-	putStone(&table, 9, 9, "w")
+	printTable(&test_table)
 
-	putStone(&table, 8, 12, "b")
-	putStone(&table, 7, 13, "b")
-	putStone(&table, 6, 14, "b")
-	putStone(&table, 5, 15, "b")
-	putStone(&table, 4, 16, "b")
-
-	printTable(&table)
-
-	dict := tableToDict(&table)
+	dict := tableToDict(&test_table)
 	fmt.Println("Data To Send:", dict)
 
-	player := []string{"b", "w"}
-	end := GameEnded(&table, player)
-	fmt.Println("Game Ended:", end)
+	verif := verifWinPoint(&test_table, 16, 16, "b")
+	fmt.Println("Test verifWinPoint b 16 16:", verif)
+	verif = verifWinPoint(&test_table, 8, 12, "b")
+	fmt.Println("Test verifWinPoint b 8 12:", verif)
+	verif = verifWinPoint(&test_table, 6, 6, "w")
+	fmt.Println("Test verifWinPoint w 6 6:", verif)
 
-	test := verifWinPoint(&table, 16, 16, "b")
-	fmt.Println("Test verifWinPoint b 16 16:", test)
-	test = verifWinPoint(&table, 6, 6, "w")
-	fmt.Println("Test verifWinPoint w 6 6:", test)
+}
+
+func testCapture() {
+	fmt.Println("\nTest capture scenario")
+	fmt.Println("---------------------")
+	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
+	putStone(&test_table, 11, 8, "w")
+	putStone(&test_table, 11, 9, "w")
+	putStone(&test_table, 11, 11, "w")
+	putStone(&test_table, 11, 12, "w")
+
+	putStone(&test_table, 10, 9, "w")
+	putStone(&test_table, 11, 10, "w")
+	putStone(&test_table, 12, 11, "b")
+
+	printTable(&test_table)
+
+	x := 11
+	y := 10
+	color := "w"
+	test_table.captured_b = 4
+	if verifWinPoint(&test_table, x, y, color) {
+		fmt.Println(test_table.captured_b)
+		if (getCapturedStones(&test_table, "b") == 4 && capturePossibe(&test_table, x, y, color)) {
+			fmt.Println("Player", color, "wins after capturing!")
+		} else {
+			fmt.Println("Player", color, "wins!")
+		}
+	}
 }
 
 func main() {
 	test()
+	testCapture()
 	
 	// RunServer()
 }
