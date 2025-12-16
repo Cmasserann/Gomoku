@@ -90,12 +90,11 @@ func testCapture() {
 	y := 10
 	color := "w"
 	test_table.captured_b = 4
-	if verifWinPoint(&test_table, x, y, color) {
+	if getCapturedStones(&test_table, "b") == 4 {
 		fmt.Println(test_table.captured_b)
-		if (getCapturedStones(&test_table, "b") == 4 && capturePossibe(&test_table, x, y, color)) {
-			fmt.Println("Player", color, "wins after capturing!")
-		} else {
-			fmt.Println("Player", color, "wins!")
+		winPoint := verifWinPoint(&test_table, x, y, color)
+		if winPoint.x_start != -1 {
+			fmt.Println("Player", color, "wins with line from (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
 		}
 	}
 }

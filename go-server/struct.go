@@ -22,6 +22,13 @@ type s_Stones struct {
 	captured_w int
 }
 
+type s_WinPoint struct {
+	x_start int
+	y_start int
+	x_end int
+	y_end int
+}
+
 
 func putStone(table *s_table, x int, y int, color string) {
 	table.cells[y*19+x] = color
@@ -73,8 +80,9 @@ func tableToDict(table *s_table) s_Stones {
 }
 
 
-func verifWinPoint(table *s_table, x int, y int, color string) bool {
-	size := table.size
+// return (bool, (x_start, y_start), (x_end, y_end))
+func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
+	size := table.	size
 	count_x := 0
 	count_y := 0
 	count_d1 := 0
@@ -85,7 +93,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) bool {
 			if table.cells[y*size+(x+i)] == color {
 				count_x++
 				if count_x >= 5 {
-					return true
+					return s_WinPoint{x_start: x + i - 4, y_start: y, x_end: x + i, y_end: y}
 				}
 			} else {
 				count_x = 0
@@ -96,7 +104,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) bool {
 			if table.cells[(y+i)*size+x] == color {
 				count_y++
 				if count_y >= 5 {
-					return true
+					return s_WinPoint{x_start: x, y_start: y + i - 4, x_end: x, y_end: y + i}
 				}
 			} else {
 				count_y = 0
@@ -107,7 +115,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) bool {
 			if table.cells[(y+i)*size+(x+i)] == color {
 				count_d1++
 				if count_d1 >= 5 {
-					return true
+					return s_WinPoint{x_start: x + i - 4, y_start: y + i - 4, x_end: x + i, y_end: y + i}
 				}
 			} else {
 				count_d1 = 0
@@ -118,7 +126,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) bool {
 			if table.cells[(y-i)*size+(x+i)] == color {
 				count_d2++
 				if count_d2 >= 5 {
-					return true
+					return s_WinPoint{x_start: x + i - 4, y_start: y - i + 4, x_end: x + i, y_end: y - i}
 				}
 			} else {
 				count_d2 = 0
@@ -126,10 +134,10 @@ func verifWinPoint(table *s_table, x int, y int, color string) bool {
 		}
 	}
 
-	return false
+	return s_WinPoint{x_start: -1, y_start: -1, x_end: -1, y_end: -1}
 }
 
-func capturePossibe(table *s_table, x int, y int, color string) bool {
+func capturePossibe(table *s_table, x int, y int, color string, exec bool) bool {
 	size := table.size
 	opponent := "b"
 	if color == "b" {
@@ -143,7 +151,7 @@ func capturePossibe(table *s_table, x int, y int, color string) bool {
 		{1, -1}, // diagonal /
 	}
 
-	// test if xy in the end of a capture
+	// test if Stone in the end of a capture
 	for i := -1; i <= 1; i += 2 {
 		for _, dir := range directions {
 			dx := dir[0] * i
@@ -168,7 +176,7 @@ func capturePossibe(table *s_table, x int, y int, color string) bool {
 		}
 	}
 
-	// test if xy in the middle of a capture
+	// test if Stone in the middle of a capture
 	for i := -1; i <= 1; i += 2 {
 		for _, dir := range directions {
 			dx := dir[0] * i
@@ -195,4 +203,19 @@ func capturePossibe(table *s_table, x int, y int, color string) bool {
 
 
 	return false
+}
+
+func captureIfPossible(table *s_table, x int, y int, color string) int {
+	size := table.size
+	opponent := "b"
+	if color == "b" {
+		opponent = "w"
+	}
+
+	directions := [][2]int{
+		{1, 0},  // horizontal
+		{0, 1},  // vertical
+		{1, 1},  // diagonal \
+		{1, -1}, // diagonal /
+	}
 }

@@ -62,21 +62,31 @@ func TestVerifWinPoint(t *testing.T) {
 		putStone(&test_table, i, i, "b")
 		putStone(&test_table, i, 4-i, "b")
 	}
-	
-	if !verifWinPoint(&test_table, 1, 0, "b") {
-		t.Error("Expected verifWinPoint to return true for vertical win")
+
+	winPoint := verifWinPoint(&test_table, 1, 0, "b")
+	if winPoint.x_start != 0 || winPoint.y_start != 0 ||
+		winPoint.x_end != 4 || winPoint.y_end != 0 {
+		t.Error("Expected win point from (0,0) to (4,0), got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
 	}
-	if !verifWinPoint(&test_table, 0, 1, "b") {
-		t.Error("Expected verifWinPoint to return true for horizontal win")
+	winPoint = verifWinPoint(&test_table, 0, 1, "b")
+	if winPoint.x_start != 0 || winPoint.y_start != 0 ||
+		winPoint.x_end != 0 || winPoint.y_end != 4 {
+		t.Error("Expected win point from (0,0) to (0,4), got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
 	}
-	if !verifWinPoint(&test_table, 1, 1, "b") {
-		t.Error("Expected verifWinPoint to return true for diagonal win \\")
+	winPoint = verifWinPoint(&test_table, 1, 1, "b")
+	if winPoint.x_start != 0 || winPoint.y_start != 0 ||
+		winPoint.x_end != 4 || winPoint.y_end != 4 {
+		t.Error("Expected win point from (0,0) to (4,4), got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
 	}
-	if !verifWinPoint(&test_table, 3, 1, "b") {
-		t.Error("Expected verifWinPoint to return true for diagonal win /")
+	winPoint = verifWinPoint(&test_table, 3, 1, "b")
+	if winPoint.x_start != 0 || winPoint.y_start != 4 ||
+		winPoint.x_end != 4 || winPoint.y_end != 0 {
+		t.Error("Expected win point from (0,4) to (4,0), got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
 	}
-	if verifWinPoint(&test_table, 8, 12, "b") {
-		t.Error("Expected verifWinPoint to return false for no win")
+	winPoint = verifWinPoint(&test_table, 8, 12, "b")
+	if winPoint.x_start != -1 || winPoint.y_start != -1 ||
+		winPoint.x_end != -1 || winPoint.y_end != -1 {
+		t.Error("Expected no win point, got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
 	}
 
 }
