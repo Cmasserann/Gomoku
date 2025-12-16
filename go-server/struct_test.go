@@ -90,20 +90,20 @@ func TestVerifWinPoint(t *testing.T) {
 	}
 
 }
-// test capturePossibe
-func TestCapturePossible(t *testing.T) {
+
+// test verifCapturePossible
+func TestVerifCapturePossible(t *testing.T) {
 	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
 	putStone(&test_table, 10, 10, "b")
 	putStone(&test_table, 11, 10, "w")
 	putStone(&test_table, 12, 10, "w")
-	if !capturePossibe(&test_table, 11, 10, "w") {
-		t.Error("Expected capturePossibe to return true for possible capture")
+	result := verifCapturePossible(&test_table, "b")
+	if result != (s_StonesPos{x: 13, y: 10}) {
+		t.Error("Expected verifCapturePossible to return position (13,10) for possible capture, got: ", result)
 	}
-	if capturePossibe(&test_table, 10, 10, "b") {
-		t.Error("Expected capturePossibe to return false for no capture")
-	}
-	if !capturePossibe(&test_table, 12, 10, "w") {
-		t.Error("Expected capturePossibe to return true for possible capture")
+	result = verifCapturePossible(&test_table, "w")
+	if result != (s_StonesPos{x: -1, y: -1}) {
+		t.Error("Expected verifCapturePossible to return (-1,-1) for no capture")
 	}
 }
 
@@ -114,7 +114,7 @@ func TestCapture(t *testing.T) {
 	putStone(&test_table, 11, 10, "w")
 	putStone(&test_table, 12, 10, "w")
 	putStone(&test_table, 13, 10, "b")
-	capture(&test_table, 10, 10, "b")
+	capture(&test_table, 10, 10, "b", "b")
 	if test_table.cells[11*19+10] != "" || test_table.cells[12*19+10] != "" {
 		t.Error("Expected stones at (11,10) and (12,10) to be captured")
 	}
@@ -124,7 +124,7 @@ func TestCapture(t *testing.T) {
 	putStone(&test_table, 10, 11, "b")
 	putStone(&test_table, 10, 12, "w")
 	putStone(&test_table, 10, 9, "w")
-	capture(&test_table, 10, 9, "w")
+	capture(&test_table, 10, 9, "w", "w")
 	if test_table.cells[10*19+10] != "" || test_table.cells[10*19+11] != "" {
 		t.Error("Expected stones at (10,10) and (10,11) to be captured")
 	}

@@ -89,19 +89,22 @@ func testCapture() {
 	x := 11
 	y := 10
 	color := "w"
+	opponentColor := "b"
 	test_table.captured_b = 4
-	if getCapturedStones(&test_table, "b") == 4 {
+	winPoint := verifWinPoint(&test_table, x, y, color)
+	if winPoint.x_start != -1 {
 		fmt.Println(test_table.captured_b)
-		winPoint := verifWinPoint(&test_table, x, y, color)
-		if winPoint.x_start != -1 {
-			fmt.Println("Player", color, "wins with line from (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
+		fmt.Println("Player", color, "wins with line from (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
+		result := verifCapturePossible(&test_table, opponentColor)
+		if getCapturedStones(&test_table, opponentColor) == 4 && result.x != -1 {
+				fmt.Println("But ", opponentColor, " win by capturing possible before placing stone at (", result.x, ",", result.y, ")")
 		}
 	}
 
 	putStone(&test_table, 9, 10, "b")
 	printTable(&test_table)
 	
-	capture(&test_table, 9, 10, "b")
+	capture(&test_table, 9, 10, "b", "b")
 	fmt.Println("After capture:")
 	printTable(&test_table)
 	fmt.Println("Captured black stones:", getCapturedStones(&test_table, "b"))

@@ -137,75 +137,23 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 	return s_WinPoint{x_start: -1, y_start: -1, x_end: -1, y_end: -1}
 }
 
-func capturePossibe(table *s_table, x int, y int, color string) bool {
+
+func verifCapturePossible(table *s_table, color string) s_StonesPos {
 	size := table.size
-	opponent := "b"
-	if color == "b" {
-		opponent = "w"
-	}
-
-	directions := [][2]int{
-		{1, 0},  // horizontal
-		{0, 1},  // vertical
-		{1, 1},  // diagonal \
-		{1, -1}, // diagonal /
-	}
-
-	// test if Stone in the end of a capture
-	for i := -1; i <= 1; i += 2 {
-		for _, dir := range directions {
-			dx := dir[0] * i
-			dy := dir[1] * i
-
-			mid_x := x + dx
-			mid_y := y + dy
-			end_x := x + 2 * dx
-			end_y := y + 2 * dy
-			empty_x := x + dx * i
-			empty_y := y + dy * i
-
-			if mid_x >= 0 && mid_x < size && mid_y >= 0 && mid_y < size &&
-				end_x >= 0 && end_x < size && end_y >= 0 && end_y < size &&
-				empty_x >= 0 && empty_x < size && empty_y >= 0 && empty_y < size {
-				if table.cells[mid_y*size+mid_x] == color &&
-					table.cells[end_y*size+end_x] == opponent &&
-					table.cells[empty_y*size+empty_x] == "" {
-					return true
+	for y := 0; y < size; y++ {
+		for x := 0; x < size; x++ {
+			if table.cells[y*size+x] == color {
+				result := capture(table, x, y, color, "")
+				if result.x != -1 {
+					return result
 				}
 			}
 		}
 	}
-
-	// test if Stone in the middle of a capture
-	for i := -1; i <= 1; i += 2 {
-		for _, dir := range directions {
-			dx := dir[0] * i
-			dy := dir[1] * i
-
-			start_x := x - dx
-			start_y := y - dy
-			end_x := x + dx
-			end_y := y + dy
-			empty_x := x - 2 * dx
-			empty_y := y - 2 * dy
-
-			if start_x >= 0 && start_x < size && start_y >= 0 && start_y < size &&
-				end_x >= 0 && end_x < size && end_y >= 0 && end_y < size &&
-				empty_x >= 0 && empty_x < size && empty_y >= 0 && empty_y < size {
-				if table.cells[start_y*size+start_x] == opponent &&
-					table.cells[end_y*size+end_x] == color &&
-					table.cells[empty_y*size+empty_x] == "" {
-					return true
-				}
-			}
-		}
-	}
-
-
-	return false
+	return s_StonesPos{x: -1, y: -1}
 }
 
-func capture(table *s_table, x int, y int, color string) {
+func capture(table *s_table, x int, y int, color string, endColor string) s_StonesPos {
 	size := table.size
 	opponent := "b"
 	if color == "b" {
@@ -237,8 +185,11 @@ func capture(table *s_table, x int, y int, color string) {
 				end_x >= 0 && end_x < size && end_y >= 0 && end_y < size {
 				if table.cells[next_y*size+next_x] == opponent &&
 					table.cells[mid_y*size+mid_x] == opponent &&
-					table.cells[end_y*size+end_x] == color {
+					table.cells[end_y*size+end_x] == endColor {
 
+					if endColor != color {
+						return s_StonesPos{x: end_x, y: end_y}
+					}
 					// Capture the opponent stone
 					table.cells[next_y*size+next_x] = ""
 					table.cells[mid_y*size+mid_x] = ""
@@ -247,8 +198,10 @@ func capture(table *s_table, x int, y int, color string) {
 					} else {
 						table.captured_w++
 					}
+					return s_StonesPos{x: end_x, y: end_y}
 				}
 			}
 		}
 	}
+	return s_StonesPos{x: -1, y: -1}
 }
