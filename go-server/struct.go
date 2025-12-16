@@ -137,7 +137,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 	return s_WinPoint{x_start: -1, y_start: -1, x_end: -1, y_end: -1}
 }
 
-func capturePossibe(table *s_table, x int, y int, color string, exec bool) bool {
+func capturePossibe(table *s_table, x int, y int, color string) bool {
 	size := table.size
 	opponent := "b"
 	if color == "b" {
@@ -205,7 +205,7 @@ func capturePossibe(table *s_table, x int, y int, color string, exec bool) bool 
 	return false
 }
 
-func captureIfPossible(table *s_table, x int, y int, color string) int {
+func capture(table *s_table, x int, y int, color string) {
 	size := table.size
 	opponent := "b"
 	if color == "b" {
@@ -217,5 +217,38 @@ func captureIfPossible(table *s_table, x int, y int, color string) int {
 		{0, 1},  // vertical
 		{1, 1},  // diagonal \
 		{1, -1}, // diagonal /
+	}
+
+	for i := -1; i <= 1; i += 2 {
+		for _, dir := range directions {
+			dx := dir[0] * i
+			dy := dir[1] * i
+
+			next_x := x + dx
+			next_y := y + dy
+			mid_x := x + 2 * dx
+			mid_y := y + 2 * dy
+			end_x := x + 3 * dx
+			end_y := y + 3 * dy
+
+
+			if next_x >= 0 && next_x < size && next_y >= 0 && next_y < size &&
+				mid_x >= 0 && mid_x < size && mid_y >= 0 && mid_y < size &&
+				end_x >= 0 && end_x < size && end_y >= 0 && end_y < size {
+				if table.cells[next_y*size+next_x] == opponent &&
+					table.cells[mid_y*size+mid_x] == opponent &&
+					table.cells[end_y*size+end_x] == color {
+
+					// Capture the opponent stone
+					table.cells[next_y*size+next_x] = ""
+					table.cells[mid_y*size+mid_x] = ""
+					if color == "b" {
+						table.captured_b++
+					} else {
+						table.captured_w++
+					}
+				}
+			}
+		}
 	}
 }

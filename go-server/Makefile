@@ -27,6 +27,6 @@ test:
 	go test ./...
 
 test_coverage:
-	go test -coverprofile cover.out && go tool cover -html=cover.out
+	go test -coverprofile cover.out && go tool cover -html=cover.out -o cover.html
 
 .PHONY: all build test_run run clean

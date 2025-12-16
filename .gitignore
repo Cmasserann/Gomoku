@@ -2,3 +2,4 @@
 */bin/*
 client-ncurses/.client-ncurses/*
 go-server/cover.out
+go-server/cover.html

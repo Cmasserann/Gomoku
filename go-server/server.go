@@ -80,9 +80,9 @@ func testCapture() {
 	putStone(&test_table, 11, 11, "w")
 	putStone(&test_table, 11, 12, "w")
 
-	putStone(&test_table, 10, 9, "w")
+	putStone(&test_table, 10, 10, "w")
 	putStone(&test_table, 11, 10, "w")
-	putStone(&test_table, 12, 11, "b")
+	putStone(&test_table, 12, 10, "b")
 
 	printTable(&test_table)
 
@@ -97,6 +97,14 @@ func testCapture() {
 			fmt.Println("Player", color, "wins with line from (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
 		}
 	}
+
+	putStone(&test_table, 9, 10, "b")
+	printTable(&test_table)
+	
+	capture(&test_table, 9, 10, "b")
+	fmt.Println("After capture:")
+	printTable(&test_table)
+	fmt.Println("Captured black stones:", getCapturedStones(&test_table, "b"))
 }
 
 func main() {

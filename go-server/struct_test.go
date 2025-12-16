@@ -106,3 +106,29 @@ func TestCapturePossible(t *testing.T) {
 		t.Error("Expected capturePossibe to return true for possible capture")
 	}
 }
+
+// test capture
+func TestCapture(t *testing.T) {
+	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
+	putStone(&test_table, 10, 10, "b")
+	putStone(&test_table, 11, 10, "w")
+	putStone(&test_table, 12, 10, "w")
+	putStone(&test_table, 13, 10, "b")
+	capture(&test_table, 10, 10, "b")
+	if test_table.cells[11*19+10] != "" || test_table.cells[12*19+10] != "" {
+		t.Error("Expected stones at (11,10) and (12,10) to be captured")
+	}
+	if test_table.captured_b != 1 {
+		t.Error("Expected captured_b to be 1, got", test_table.captured_b)
+	}
+	putStone(&test_table, 10, 11, "b")
+	putStone(&test_table, 10, 12, "w")
+	putStone(&test_table, 10, 9, "w")
+	capture(&test_table, 10, 9, "w")
+	if test_table.cells[10*19+10] != "" || test_table.cells[10*19+11] != "" {
+		t.Error("Expected stones at (10,10) and (10,11) to be captured")
+	}
+	if test_table.captured_w != 1 {
+		t.Error("Expected captured_w to be 1, got", test_table.captured_w)
+	}
+}
