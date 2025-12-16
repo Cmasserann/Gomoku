@@ -77,11 +77,11 @@ func testCapture() {
 	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
 	putStone(&test_table, 11, 8, "w")
 	putStone(&test_table, 11, 9, "w")
+	putStone(&test_table, 11, 10, "w")
 	putStone(&test_table, 11, 11, "w")
 	putStone(&test_table, 11, 12, "w")
 
 	putStone(&test_table, 10, 10, "w")
-	putStone(&test_table, 11, 10, "w")
 	putStone(&test_table, 12, 10, "b")
 
 	printTable(&test_table)
@@ -91,10 +91,9 @@ func testCapture() {
 	color := "w"
 	opponentColor := "b"
 	test_table.captured_b = 4
-	winPoint := verifWinPoint(&test_table, x, y, color)
-	if winPoint.x_start != -1 {
+	if verifWinPoint(&test_table, x, y, color) {
 		fmt.Println(test_table.captured_b)
-		fmt.Println("Player", color, "wins with line from (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
+		fmt.Println(color, " win by five in a row at (", x, ",", y, ")")
 		result := verifCapturePossible(&test_table, opponentColor)
 		if getCapturedStones(&test_table, opponentColor) == 4 && result.x != -1 {
 				fmt.Println("But ", opponentColor, " win by capturing possible before placing stone at (", result.x, ",", result.y, ")")
@@ -166,9 +165,9 @@ func testWin() {
 
 func main() {
 	// test()
-	// testCapture()
+	testCapture()
 	// testIllegalMove()
-	testWin()
+	// testWin()
 
 
 	

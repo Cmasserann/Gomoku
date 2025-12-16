@@ -63,32 +63,21 @@ func TestVerifWinPoint(t *testing.T) {
 		test_table.cells[i*19+(4-i)] = "b"
 	}
 
-	winPoint := verifWinPoint(&test_table, 1, 0, "b")
-	if winPoint.x_start != 0 || winPoint.y_start != 0 ||
-		winPoint.x_end != 4 || winPoint.y_end != 0 {
-		t.Error("Expected win point from (0,0) to (4,0), got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
+	if !verifWinPoint(&test_table, 1, 0, "b") {
+		t.Error("Expected win by horizontal line for black")
 	}
-	winPoint = verifWinPoint(&test_table, 0, 1, "b")
-	if winPoint.x_start != 0 || winPoint.y_start != 0 ||
-		winPoint.x_end != 0 || winPoint.y_end != 4 {
-		t.Error("Expected win point from (0,0) to (0,4), got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
+	if !verifWinPoint(&test_table, 0, 1, "b") {
+		t.Error("Expected win by vertical line for black")
 	}
-	winPoint = verifWinPoint(&test_table, 1, 1, "b")
-	if winPoint.x_start != 0 || winPoint.y_start != 0 ||
-		winPoint.x_end != 4 || winPoint.y_end != 4 {
-		t.Error("Expected win point from (0,0) to (4,4), got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
+	if !verifWinPoint(&test_table, 1, 1, "b") {
+		t.Error("Expected win by diagonal \\ line for black")
 	}
-	winPoint = verifWinPoint(&test_table, 3, 1, "b")
-	if winPoint.x_start != 0 || winPoint.y_start != 4 ||
-		winPoint.x_end != 4 || winPoint.y_end != 0 {
-		t.Error("Expected win point from (0,4) to (4,0), got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
+	if !verifWinPoint(&test_table, 3, 1, "b") {
+		t.Error("Expected win by diagonal / line for black")
 	}
-	winPoint = verifWinPoint(&test_table, 8, 12, "b")
-	if winPoint.x_start != -1 || winPoint.y_start != -1 ||
-		winPoint.x_end != -1 || winPoint.y_end != -1 {
-		t.Error("Expected no win point, got (", winPoint.x_start, ",", winPoint.y_start, ") to (", winPoint.x_end, ",", winPoint.y_end, ")")
+	if verifWinPoint(&test_table, 8, 12, "b") {
+		t.Error("Expected no win point for black at (8,12)")
 	}
-
 }
 
 // test verifCapturePossible

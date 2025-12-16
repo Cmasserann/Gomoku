@@ -94,7 +94,7 @@ func inbounds(size int, x int, y int) bool {
 	return x >= 0 && x < size && y >= 0 && y < size
 }
 
-func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
+func verifWinPoint(table *s_table, x int, y int, color string) bool {
 	size := table.	size
 	count_x := 0
 	count_y := 0
@@ -106,7 +106,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 			if table.cells[y*size+(x+i)] == color {
 				count_x++
 				if count_x >= 5 {
-					return s_WinPoint{x_start: x + i - 4, y_start: y, x_end: x + i, y_end: y}
+					return true
 				}
 			} else {
 				count_x = 0
@@ -117,7 +117,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 			if table.cells[(y+i)*size+x] == color {
 				count_y++
 				if count_y >= 5 {
-					return s_WinPoint{x_start: x, y_start: y + i - 4, x_end: x, y_end: y + i}
+					return true
 				}
 			} else {
 				count_y = 0
@@ -128,7 +128,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 			if table.cells[(y+i)*size+(x+i)] == color {
 				count_d1++
 				if count_d1 >= 5 {
-					return s_WinPoint{x_start: x + i - 4, y_start: y + i - 4, x_end: x + i, y_end: y + i}
+					return true
 				}
 			} else {
 				count_d1 = 0
@@ -139,7 +139,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 			if table.cells[(y-i)*size+(x+i)] == color {
 				count_d2++
 				if count_d2 >= 5 {
-					return s_WinPoint{x_start: x + i - 4, y_start: y - i + 4, x_end: x + i, y_end: y - i}
+					return true
 				}
 			} else {
 				count_d2 = 0
@@ -147,7 +147,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 		}
 	}
 
-	return s_WinPoint{x_start: -1, y_start: -1, x_end: -1, y_end: -1}
+	return false
 }
 
 
