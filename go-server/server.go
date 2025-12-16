@@ -110,9 +110,52 @@ func testCapture() {
 	fmt.Println("Captured black stones:", getCapturedStones(&test_table, "b"))
 }
 
+func testIllegalMove() {
+	fmt.Println("\nTest illegal move scenario")
+	fmt.Println("-------------------------")
+	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
+	putStone(&test_table, 10, 8, "w")
+	putStone(&test_table, 10, 9, "w")
+	putStone(&test_table, 9, 10, "w")
+	putStone(&test_table, 7, 10, "w")
+	test_table.cells[10*19+10] = "T"
+
+	putStone(&test_table, 1, 0, "w")
+	putStone(&test_table, 1, 2, "w")
+	putStone(&test_table, 0, 0, "w")
+	putStone(&test_table, 3, 3, "w")
+	putStone(&test_table, 3, 1, "w")
+	putStone(&test_table, 4, 1, "w")
+	test_table.cells[1*19+1] = "T"
+	printTable(&test_table)
+	result := illegalMove(&test_table, 10, 10, "w")
+	if result {
+		fmt.Println("Move at (10,10) for white is illegal (double free three)")
+	} else {
+		fmt.Println("Move at (10,10) for white is legal")
+	}
+	result = illegalMove(&test_table, 10, 10, "b")
+	if result {
+		fmt.Println("Move at (10,10) for blqck is illegal (double free three)")
+	} else {
+		fmt.Println("Move at (10,10) for blqck is legal")
+	}
+
+	result = illegalMove(&test_table, 1, 1, "w")
+	if result {
+		fmt.Println("Move at (1,1) for white is illegal (double free three)")
+	} else {
+		fmt.Println("Move at (1,1) for white is legal")
+	}
+
+}
+
 func main() {
-	test()
-	testCapture()
+	// test()
+	// testCapture()
+	testIllegalMove()
+
+
 	
 	// RunServer()
 }

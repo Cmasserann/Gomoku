@@ -132,3 +132,63 @@ func TestCapture(t *testing.T) {
 		t.Error("Expected captured_w to be 1, got", test_table.captured_w)
 	}
 }
+
+// test freeThree
+func TestFreeThree(t *testing.T) {
+	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
+	putStone(&test_table, 10, 8, "w")
+	putStone(&test_table, 10, 9, "w")
+	putStone(&test_table, 9, 10, "w")
+	putStone(&test_table, 7, 10, "w")
+	result := freeThrees(&test_table, 10, 10, "w")
+	if result == 0 {
+		t.Error("Expected freeThree to not return 0 for white, got: ", result)
+	}
+	result = freeThrees(&test_table, 10, 10, "b")
+	if result != 0 {
+		t.Error("Expected freeThree to 0 for black, got: ", result)
+	}
+
+	putStone(&test_table, 1, 0, "w")
+	putStone(&test_table, 1, 2, "w")
+	putStone(&test_table, 0, 0, "w")
+	putStone(&test_table, 3, 3, "w")
+	putStone(&test_table, 3, 1, "w")
+	putStone(&test_table, 4, 1, "w")
+	result = freeThrees(&test_table, 1, 1, "w")
+	if result == 0 {
+		t.Error("Expected freeThree to not return 0 for white at (0,0), got: ", result)
+	}
+}
+
+// test illegalMove
+func TestIllegalMove(t *testing.T) {
+	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
+	putStone(&test_table, 10, 8, "w")
+	putStone(&test_table, 10, 9, "w")
+	putStone(&test_table, 9, 10, "w")
+	putStone(&test_table, 8, 10, "w")
+	if !illegalMove(&test_table, 10, 10, "w") {
+		t.Error("Expected move at (10,10) for white to be illegal (double free three)")
+	}
+
+	if illegalMove(&test_table, 10, 10, "b") {
+		t.Error("Expected move at (10,10) for black to be legal")
+	}
+
+	if !illegalMove(&test_table, -1, 0, "b") {
+		t.Error("Expected move at (-1,0) for black to be illegal (out of bounds)")
+	}
+
+	if !illegalMove(&test_table, 0, 19, "w") {
+		t.Error("Expected move at (0,19) for white to be illegal (out of bounds)")
+	}
+
+	if !illegalMove(&test_table, 10, 8, "w") {
+		t.Error("Expected move at (10,8) for white to be illegal (cell occupied)")
+	}
+
+	if !illegalMove(&test_table, 0, 0, "T") {
+		t.Error("Expected move at (0,0) for invalid color 'T' to be illegal")
+	}
+}

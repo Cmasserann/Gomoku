@@ -29,6 +29,12 @@ type s_WinPoint struct {
 	y_end int
 }
 
+var directions = [][2]int{
+			{1, 0},  // horizontal
+			{0, 1},  // vertical
+			{1, 1},  // diagonal \
+			{1, -1}, // diagonal /
+		}
 
 func putStone(table *s_table, x int, y int, color string) {
 	table.cells[y*19+x] = color
@@ -79,8 +85,10 @@ func tableToDict(table *s_table) s_Stones {
 	return result
 }
 
+func inbounds(size int, x int, y int) bool {
+	return x >= 0 && x < size && y >= 0 && y < size
+}
 
-// return (bool, (x_start, y_start), (x_end, y_end))
 func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 	size := table.	size
 	count_x := 0
@@ -89,7 +97,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 	count_d2 := 0
 
 	for i := -4; i <= 4; i++ {
-		if x+i >= 0 && x+i < size {
+		if inbounds(size, x+i, y) {
 			if table.cells[y*size+(x+i)] == color {
 				count_x++
 				if count_x >= 5 {
@@ -100,7 +108,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 			}
 		}
 
-		if y+i >= 0 && y+i < size {
+		if inbounds(size, x, y+i) {
 			if table.cells[(y+i)*size+x] == color {
 				count_y++
 				if count_y >= 5 {
@@ -111,7 +119,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 			}
 		}
 
-		if x+i >= 0 && x+i < size && y+i >= 0 && y+i < size {
+		if inbounds(size, x+i, y+i) {
 			if table.cells[(y+i)*size+(x+i)] == color {
 				count_d1++
 				if count_d1 >= 5 {
@@ -122,7 +130,7 @@ func verifWinPoint(table *s_table, x int, y int, color string) s_WinPoint {
 			}
 		}
 
-		if x+i >= 0 && x+i < size && y-i >= 0 && y-i < size {
+		if inbounds(size, x+i, y-i) {
 			if table.cells[(y-i)*size+(x+i)] == color {
 				count_d2++
 				if count_d2 >= 5 {
@@ -160,13 +168,6 @@ func capture(table *s_table, x int, y int, color string, endColor string) s_Ston
 		opponent = "w"
 	}
 
-	directions := [][2]int{
-		{1, 0},  // horizontal
-		{0, 1},  // vertical
-		{1, 1},  // diagonal \
-		{1, -1}, // diagonal /
-	}
-
 	for i := -1; i <= 1; i += 2 {
 		for _, dir := range directions {
 			dx := dir[0] * i
@@ -180,9 +181,9 @@ func capture(table *s_table, x int, y int, color string, endColor string) s_Ston
 			end_y := y + 3 * dy
 
 
-			if next_x >= 0 && next_x < size && next_y >= 0 && next_y < size &&
-				mid_x >= 0 && mid_x < size && mid_y >= 0 && mid_y < size &&
-				end_x >= 0 && end_x < size && end_y >= 0 && end_y < size {
+			if inbounds(size, next_x, next_y) &&
+				inbounds(size, mid_x, mid_y) &&
+				inbounds(size, end_x, end_y) {
 				if table.cells[next_y*size+next_x] == opponent &&
 					table.cells[mid_y*size+mid_x] == opponent &&
 					table.cells[end_y*size+end_x] == endColor {
@@ -204,4 +205,82 @@ func capture(table *s_table, x int, y int, color string, endColor string) s_Ston
 		}
 	}
 	return s_StonesPos{x: -1, y: -1}
+}
+
+func freeThrees(table *s_table, x int, y int, color string) int {
+	size := table.size
+	count := 0
+	for i := -1; i <= 1; i += 2 {
+		for _, dir := range directions {
+
+			dx := dir[0] * i
+			dy := dir[1] * i
+
+			next_x := x + dx
+			next_y := y + dy
+			mid_x := x + 2 * dx
+			mid_y := y + 2 * dy
+			end_x := x + 3 * dx
+			end_y := y + 3 * dy
+
+			if inbounds(size, next_x, next_y) &&
+				inbounds(size, mid_x, mid_y) &&
+				inbounds(size, end_x, end_y) {
+				if table.cells[next_y*size+next_x] == color &&
+					table.cells[mid_y*size+mid_x] == color &&
+					table.cells[end_y*size+end_x] == "" {
+						count++
+				} else if table.cells[next_y*size+next_x] == color &&
+					table.cells[mid_y*size+mid_x] == "" &&
+					table.cells[end_y*size+end_x] == color {
+						count++
+				} else if table.cells[next_y*size+next_x] == "" &&
+					table.cells[mid_y*size+mid_x] == color &&
+					table.cells[end_y*size+end_x] == color {
+						count++
+				}
+			}
+
+			next_x = x - dx
+			next_y = y - dy
+			mid_x = x + 1 * dx
+			mid_y = y + 1 * dy
+			end_x = x + 2 * dx
+			end_y = y + 2 * dy
+
+			if inbounds(size, next_x, next_y) &&
+				inbounds(size, mid_x, mid_y) &&
+				inbounds(size, end_x, end_y) {
+				if table.cells[next_y*size+next_x] == color &&
+					table.cells[mid_y*size+mid_x] == color &&
+					table.cells[end_y*size+end_x] == "" {
+						count++
+				} else if table.cells[next_y*size+next_x] == color &&
+					table.cells[mid_y*size+mid_x] == "" &&
+					table.cells[end_y*size+end_x] == color {
+						count++
+				} 
+			}
+		}
+	}
+	return count
+}
+
+func illegalMove(table *s_table, x int, y int, color string) bool {
+	if !inbounds(table.size, x, y) {
+		return true
+	}
+
+	if table.cells[y*table.size+x] != "" {
+		return true
+	}
+
+	if color != "b" && color != "w" {
+		return true
+	}
+	
+	if freeThrees(table, x, y, color) >= 2 {
+		return true
+	}
+	return false
 }
