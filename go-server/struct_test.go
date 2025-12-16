@@ -7,9 +7,9 @@ func TestPutStone(t *testing.T) {
 	test_table := s_table{ size: 5, captured_b: 0, captured_w: 0 }
 	putStone(&test_table, 2, 2, "b")
 	putStone(&test_table, 3, 3, "w")
-	expectedCells := [19*19]string{}
-	expectedCells[2*19+2] = "b"
-	expectedCells[3*19+3] = "w"
+	expectedCells := [5*5]string{}
+	expectedCells[2*5+2] = "b"
+	expectedCells[3*5+3] = "w"
 	for i, cell := range expectedCells {
 		if test_table.cells[i] != cell {
 			t.Errorf("Expected cell %d to be %s, got %s", i, cell, test_table.cells[i])
@@ -21,7 +21,7 @@ func TestPutStone(t *testing.T) {
 func TestPrintTable(t *testing.T) {
 	test_table := s_table{ size: 5, captured_b: 0, captured_w: 0 }
 	putStone(&test_table, 0, 0, "b")
-	putStone(&test_table, 4, 4, "w")
+	putStone(&test_table, 1, 1, "w")
 	printTable(&test_table)
 }
 
@@ -57,10 +57,10 @@ func TestTableToDict(t *testing.T) {
 func TestVerifWinPoint(t *testing.T) {
 	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
 	for i := 0; i < 5; i++ {
-		putStone(&test_table, i, 0, "b")
-		putStone(&test_table, 0, i, "b")
-		putStone(&test_table, i, i, "b")
-		putStone(&test_table, i, 4-i, "b")
+		test_table.cells[0*19+i] = "b"
+		test_table.cells[i*19+0] = "b"
+		test_table.cells[i*19+i] = "b"
+		test_table.cells[i*19+(4-i)] = "b"
 	}
 
 	winPoint := verifWinPoint(&test_table, 1, 0, "b")

@@ -150,10 +150,25 @@ func testIllegalMove() {
 
 }
 
+func testWin() {
+	fmt.Println("\nTest win scenario")
+	fmt.Println("-----------------")
+	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
+	for i := 0; i < 5; i++ {
+		putStone(&test_table, i, 0, "b")
+		putStone(&test_table, 0, i, "b")
+		putStone(&test_table, i, i, "b")
+		putStone(&test_table, i, 4-i, "b")
+	}
+	printTable(&test_table)
+}
+
+
 func main() {
 	// test()
 	// testCapture()
-	testIllegalMove()
+	// testIllegalMove()
+	testWin()
 
 
 	

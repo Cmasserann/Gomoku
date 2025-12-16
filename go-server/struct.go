@@ -36,8 +36,13 @@ var directions = [][2]int{
 			{1, -1}, // diagonal /
 		}
 
-func putStone(table *s_table, x int, y int, color string) {
-	table.cells[y*19+x] = color
+func putStone(table *s_table, x int, y int, color string) bool {
+	size := table.size
+	if illegalMove(table, x, y, color) {
+		return false
+	}
+	table.cells[y*size+x] = color
+	return true
 }
 
 func printTable(table *s_table) {
@@ -270,11 +275,11 @@ func illegalMove(table *s_table, x int, y int, color string) bool {
 	if !inbounds(table.size, x, y) {
 		return true
 	}
-
+	
 	if table.cells[y*table.size+x] != "" {
 		return true
 	}
-
+	
 	if color != "b" && color != "w" {
 		return true
 	}
