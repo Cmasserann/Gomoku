@@ -1,7 +1,6 @@
 SRC_FILE := server.go \
 			struct.go 
 
-
 BIN_DIR := ./bin
 
 
@@ -17,9 +16,17 @@ run: build
 	${BIN_DIR}/server
 
 clean:
-	rm -rf ${BIN_DIR}/*
+	rm -rf ${BIN_DIR}
+
+fclean: clean
 
 remake:
 	fclean all
+
+test:
+	go test ./...
+
+test_coverage:
+	go test -coverprofile cover.out && go tool cover -html=cover.out -o cover.html
 
 .PHONY: all build test_run run clean
