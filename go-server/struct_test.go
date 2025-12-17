@@ -15,6 +15,10 @@ func TestPutStone(t *testing.T) {
 			t.Errorf("Expected cell %d to be %s, got %s", i, cell, test_table.cells[i])
 		}
 	}
+
+	if putStone(&test_table, 5, 5, "b") {
+		t.Error("Expected putStone to return false for out of bounds")
+	}
 }
 
 // test printTable (just to ensure it runs without error)

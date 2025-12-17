@@ -88,7 +88,7 @@ func inbounds(size int, x int, y int) bool {
 }
 
 func verifWinPoint(table *s_table, x int, y int, color string) bool {
-	size := table.	size
+	size := table.size
 	count_x := 0
 	count_y := 0
 	count_d1 := 0
