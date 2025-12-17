@@ -22,13 +22,6 @@ type s_Stones struct {
 	captured_w int
 }
 
-type s_WinPoint struct {
-	x_start int
-	y_start int
-	x_end int
-	y_end int
-}
-
 var directions = [][2]int{
 			{1, 0},  // horizontal
 			{0, 1},  // vertical
