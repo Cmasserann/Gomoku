@@ -8,7 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const gobanSize = 361 // 19x19 goban
+const gobanWidth = 19
+const gobanSize = gobanWidth * gobanWidth
 
 type MoveRequest struct {
 	X     int `json:"x"`
@@ -19,9 +20,11 @@ type MoveRequest struct {
 
 func updateGoban(goban []byte,x int, y int, color int) bool {
 
-	index := x*gobanSize + y
+	index := gobanWidth * y + x
 
-	if index > -1 && index < gobanSize {
+	fmt.Println("Index calculé :", index)
+
+	if index > -1 && index < gobanSize && (color == 1 || color == 2) && goban[index] == 0 {
 		goban[index] = byte(color)
 		return true
 	}
@@ -31,9 +34,9 @@ func updateGoban(goban []byte,x int, y int, color int) bool {
 
 func printGoban(goban []byte) {
 	fmt.Println("Goban actuel :")
-	for i := 0; i < 19; i++ {
-		for j := 0; j < 19; j++ {
-			index := i*19 + j
+	for i := 0; i < gobanWidth; i++ {
+		for j := 0; j < gobanWidth; j++ {
+			index := i*gobanWidth + j
 			fmt.Printf("%d ", goban[index])
 		}
 		fmt.Println()
@@ -41,13 +44,13 @@ func printGoban(goban []byte) {
 }
 
 func convertGobanTo2D(goban []byte) [][]int {
-	board2D := make([][]int, 19)
+	board2D := make([][]int, gobanWidth)
 	for i := range board2D {
-		board2D[i] = make([]int, 19)
+		board2D[i] = make([]int, gobanWidth)
 	}
-	for i := 0; i < 19; i++ {
-		for j := 0; j < 19; j++ {
-			index := i*19 + j
+	for i := 0; i < gobanWidth; i++ {
+		for j := 0; j < gobanWidth; j++ {
+			index := i*gobanWidth + j
 			board2D[i][j] = int(goban[index])
 		}
 	}
@@ -70,7 +73,7 @@ func main() {
 
 	r.GET("/board", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"board": goban,
+			"board": convertGobanTo2D(goban),
 		})
 	})
 
