@@ -1,21 +1,22 @@
-SRCS_FILE := server.go \
-			struct.go \
-			IA.go \
+SRCS := server.go struct.go IA.go
+OBJS := $(SRCS:%.go=/tmp/%.o)
 
 
 BIN_DIR := ./bin
 
-
-all: build
-
-build:
-	go build -o ${BIN_DIR}/server ${SRCS_FILE}
+all: run
 
 run: build
 	${BIN_DIR}/server
 
+build:
+	go build -o ${BIN_DIR}/server ${SRCS}
+
+build_inspect:
+	go build -x -work -o ${BIN_DIR}/server ${SRCS}
+
 clean:
-	rm -rf ${BIN_DIR}
+	rm -rf ${BIN_DIR} /tmp/*.o /tmp/*.a
 
 remake:
 	fclean all
@@ -26,4 +27,4 @@ test:
 test_coverage:
 	go test -coverprofile cover.out && go tool cover -html=cover.out -o cover.html
 
-.PHONY: all build test_run run clean
+.PHONY: all build build_inspect test run clean
