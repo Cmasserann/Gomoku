@@ -1,9 +1,7 @@
 SRCS := server.go struct.go IA.go
-OBJS := $(SRCS:%.go=/tmp/%.o)
 
 
 BIN_DIR := ./bin
-
 all: run
 
 run: build
