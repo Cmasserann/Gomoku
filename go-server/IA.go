@@ -280,16 +280,16 @@ func evaluateTable(table *s_table, color uint8) int {
 	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {
 			if table.cells[y * size + x] == color {
-				score += check_allignments(table, x, y, color)
+				score += check_alignments(table, x, y, color)
 			} else if table.cells[y * size + x] == opponentColor(color) {
-				score -= check_allignments(table, x, y, opponentColor(color))
+				score -= check_alignments(table, x, y, opponentColor(color))
 			}
 		}
 	}
 	return score
 }
 
-func check_allignments(table *s_table, x int, y int, color uint8) int {
+func check_alignments(table *s_table, x int, y int, color uint8) int {
 	score := 0
 	size := table.size
 
