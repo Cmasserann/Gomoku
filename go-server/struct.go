@@ -5,7 +5,7 @@ import "fmt"
 
 type s_table struct {
 	size int
-	cells [19*19]string
+	cells [19*19]uint8
 	captured_b int
 	captured_w int
 }
@@ -29,7 +29,7 @@ var directions = [][2]int{
 			{1, -1}, // diagonal /
 		}
 
-func putStone(table *s_table, x int, y int, color string) bool {
+func putStone(table *s_table, x int, y int, color uint8) bool {
 	size := table.size
 	if illegalMove(table, x, y, color) {
 		return false
@@ -44,18 +44,18 @@ func printTable(table *s_table) {
 	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {
 			cell := table.cells[y*size+x]
-			if cell == "" {
+			if cell == 0 {
 				fmt.Print(". ")
 			} else {
-				fmt.Printf("%s ", cell)
+				fmt.Printf("%d ", cell)
 			}
 		}	
 		fmt.Println()
 	}
 }
 
-func getCapturedStones(table *s_table, color string) int {
-	if color == "b" {
+func getCapturedStones(table *s_table, color uint8) int {
+	if color == 1 {
 		return table.captured_b 
 	}
 	return table.captured_w
@@ -70,9 +70,9 @@ func tableToDict(table *s_table) s_Stones {
 	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {
 			cell := table.cells[y*size+x]
-			if cell == "b" {
+			if cell == 1 {
 				result.b = append(result.b, s_StonesPos{x: x, y: y})
-			} else if cell == "w" {
+			} else if cell == 2 {
 				result.w = append(result.w, s_StonesPos{x: x, y: y})
 			}
 		}
@@ -87,7 +87,7 @@ func inbounds(size int, x int, y int) bool {
 	return x >= 0 && x < size && y >= 0 && y < size
 }
 
-func verifWinPoint(table *s_table, x int, y int, color string) bool {
+func verifWinPoint(table *s_table, x int, y int, color uint8) bool {
 	size := table.size
 	count_x := 0
 	count_y := 0
@@ -144,26 +144,27 @@ func verifWinPoint(table *s_table, x int, y int, color string) bool {
 }
 
 
-func verifCapturePossible(table *s_table, color string) s_StonesPos {
+func verifCapturePossible(table *s_table, color uint8) []s_StonesPos {
 	size := table.size
 	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {
 			if table.cells[y*size+x] == color {
-				result := capture(table, x, y, color, "")
-				if result.x != -1 {
+				result := capture(table, x, y, color, 0)
+				if len(result) > 0 {
 					return result
 				}
 			}
 		}
 	}
-	return s_StonesPos{x: -1, y: -1}
+	return []s_StonesPos{}
 }
 
-func capture(table *s_table, x int, y int, color string, endColor string) s_StonesPos {
+func capture(table *s_table, x int, y int, color uint8, endColor uint8) []s_StonesPos {
 	size := table.size
-	opponent := "b"
-	if color == "b" {
-		opponent = "w"
+	result := []s_StonesPos{}
+	opponent := uint8(1)
+	if color == 1 {
+		opponent = 2
 	}
 
 	for i := -1; i <= 1; i += 2 {
@@ -186,26 +187,25 @@ func capture(table *s_table, x int, y int, color string, endColor string) s_Ston
 					table.cells[mid_y*size+mid_x] == opponent &&
 					table.cells[end_y*size+end_x] == endColor {
 
-					if endColor != color {
-						return s_StonesPos{x: end_x, y: end_y}
+					if endColor == color {
+						// Capture the opponent stone
+						table.cells[next_y*size+next_x] = 0
+						table.cells[mid_y*size+mid_x] = 0
+						if color == 1 {
+							table.captured_b++
+							} else {
+								table.captured_w++
+						}
 					}
-					// Capture the opponent stone
-					table.cells[next_y*size+next_x] = ""
-					table.cells[mid_y*size+mid_x] = ""
-					if color == "b" {
-						table.captured_b++
-					} else {
-						table.captured_w++
-					}
-					return s_StonesPos{x: end_x, y: end_y}
+					result = append(result, s_StonesPos{x: end_x, y: end_y})
 				}
 			}
 		}
 	}
-	return s_StonesPos{x: -1, y: -1}
+	return result
 }
 
-func freeThrees(table *s_table, x int, y int, color string) int {
+func freeThrees(table *s_table, x int, y int, color uint8) int {
 	size := table.size
 	count := 0
 	for i := -1; i <= 1; i += 2 {
@@ -226,13 +226,13 @@ func freeThrees(table *s_table, x int, y int, color string) int {
 				inbounds(size, end_x, end_y) {
 				if table.cells[next_y*size+next_x] == color &&
 					table.cells[mid_y*size+mid_x] == color &&
-					table.cells[end_y*size+end_x] == "" {
+					table.cells[end_y*size+end_x] == 0 {
 						count++
 				} else if table.cells[next_y*size+next_x] == color &&
-					table.cells[mid_y*size+mid_x] == "" &&
+					table.cells[mid_y*size+mid_x] == 0 &&
 					table.cells[end_y*size+end_x] == color {
 						count++
-				} else if table.cells[next_y*size+next_x] == "" &&
+				} else if table.cells[next_y*size+next_x] == 0 &&
 					table.cells[mid_y*size+mid_x] == color &&
 					table.cells[end_y*size+end_x] == color {
 						count++
@@ -251,10 +251,10 @@ func freeThrees(table *s_table, x int, y int, color string) int {
 				inbounds(size, end_x, end_y) {
 				if table.cells[next_y*size+next_x] == color &&
 					table.cells[mid_y*size+mid_x] == color &&
-					table.cells[end_y*size+end_x] == "" {
+					table.cells[end_y*size+end_x] == 0 {
 						count++
 				} else if table.cells[next_y*size+next_x] == color &&
-					table.cells[mid_y*size+mid_x] == "" &&
+					table.cells[mid_y*size+mid_x] == 0 &&
 					table.cells[end_y*size+end_x] == color {
 						count++
 				} 
@@ -264,16 +264,19 @@ func freeThrees(table *s_table, x int, y int, color string) int {
 	return count
 }
 
-func illegalMove(table *s_table, x int, y int, color string) bool {
+func illegalMove(table *s_table, x int, y int, color uint8) bool {
 	if !inbounds(table.size, x, y) {
+		fmt.Println("Out of bounds")
 		return true
 	}
 	
-	if table.cells[y*table.size+x] != "" {
+	if table.cells[y*table.size+x] != 0 {
+		fmt.Println("Cell already occupied")
 		return true
 	}
 	
-	if color != "b" && color != "w" {
+	if color != 1 && color != 2 {
+		fmt.Println("Invalid color")
 		return true
 	}
 	
