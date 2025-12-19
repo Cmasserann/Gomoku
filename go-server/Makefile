@@ -1,6 +1,7 @@
 SRC_FILE := server.go \
 			struct.go 
 
+
 BIN_DIR := ./bin
 
 
@@ -17,8 +18,6 @@ run: build
 
 clean:
 	rm -rf ${BIN_DIR}
-
-fclean: clean
 
 remake:
 	fclean all
