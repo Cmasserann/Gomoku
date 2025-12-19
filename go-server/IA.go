@@ -186,11 +186,13 @@ func alphaBeta(depth int, table s_table, availableMovesTable s_table, alpha, bet
 						continue
 					}
 					
+					localAlpha := alpha
+					localBeta := beta
 					if len(capture(&newTable, x, y, opponent, opponent)) > 0 {
-						beta -= 500
+						localBeta -= 500
 					}
 
-					eval := alphaBeta(depth-1, newTable, updateAvailableMoves(availableMovesTable, opponent, x, y), alpha, beta, true, color)
+					eval := alphaBeta(depth-1, newTable, updateAvailableMoves(availableMovesTable, opponent, x, y), localAlpha, localBeta, true, color)
 
 					if eval < minEval {
 						minEval = eval
