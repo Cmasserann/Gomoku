@@ -13,14 +13,14 @@ type s_ScorePos struct {
 
 var depth =float64(8)
 
-func opponentColor(color string) string {
-	if color == "b" {
-		return "w"
+func opponentColor(color uint8) uint8 {
+	if color == 1 {
+		return 2
 	}
-	return "b"
+	return 1
 }
 
-func IAMain(table s_table, color string) {
+func IAMain(table s_table, color uint8) {
 	var wg sync.WaitGroup
 	
 	result := make(chan s_ScorePos, 100)
@@ -60,13 +60,13 @@ func IAMain(table s_table, color string) {
 	fmt.Println("IA plays at position:", pos, "with score:", maxScore)
 }
 
-func getAvailableMoves(table s_table, color string) []s_StonesPos {
+func getAvailableMoves(table s_table, color uint8) []s_StonesPos {
 	size := table.size
 	availableMoves := []s_StonesPos{}
 
 	for y := 0; y < size; y++ {
 		for x := 0; x < size; x++ {
-			if table.cells[y*size+x] == "" && 
+			if table.cells[y*size+x] == 0 && 
 				check_close(&table, x, y, color) &&
 				!illegalMove(&table, x, y, color) {
 				availableMoves = append(availableMoves, s_StonesPos{x: x, y: y})
@@ -76,7 +76,7 @@ func getAvailableMoves(table s_table, color string) []s_StonesPos {
 	return availableMoves
 }
 
-func alphaBeta(depth int, table s_table, alpha, beta float64, IsMaximizing bool ,color string) float64 {
+func alphaBeta(depth int, table s_table, alpha, beta float64, IsMaximizing bool ,color uint8) float64 {
 	if depth == 0 {
 		return evaluateTable(&table, color)
 	}
@@ -101,7 +101,7 @@ func alphaBeta(depth int, table s_table, alpha, beta float64, IsMaximizing bool 
 		for _, move := range moves {
 			x := move.x
 			y := move.y
-			if table.cells[y * size + x] == "" && 
+			if table.cells[y * size + x] == 0 && 
 				check_close(&table, x, y, color) &&
 				!illegalMove(&table, x, y, color) {
 
@@ -110,7 +110,7 @@ func alphaBeta(depth int, table s_table, alpha, beta float64, IsMaximizing bool 
 						continue
 					}
 
-					if capture(&newTable, x, y, color, color).x != -1 {
+					if len(capture(&newTable, x, y, color, color)) > 0 {
 						alpha += 0.5
 					}
 
@@ -131,7 +131,7 @@ func alphaBeta(depth int, table s_table, alpha, beta float64, IsMaximizing bool 
 		for _, move := range moves {
 			x := move.x
 			y := move.y
-			if table.cells[y * size + x] == "" && 
+			if table.cells[y * size + x] == 0 && 
 				check_close(&table, x, y, opponent) &&
 				!illegalMove(&table, x, y, opponent) {
 
@@ -140,7 +140,7 @@ func alphaBeta(depth int, table s_table, alpha, beta float64, IsMaximizing bool 
 						continue
 					}
 					
-					if capture(&newTable, x, y, opponent, opponent).x != -1 {
+					if len(capture(&newTable, x, y, opponent, opponent)) > 0 {
 						beta -= 0.5
 					}
 
@@ -159,7 +159,7 @@ func alphaBeta(depth int, table s_table, alpha, beta float64, IsMaximizing bool 
 }
 
 
-func pruning(table s_table, color string, pos s_StonesPos) float64{
+func pruning(table s_table, color uint8, pos s_StonesPos) float64{
 	score := float64(0)
 	score += check_win(&table, pos.x, pos.y, color)
 	score += check_lose(&table, pos.x, pos.y, color)
@@ -168,13 +168,13 @@ func pruning(table s_table, color string, pos s_StonesPos) float64{
 	return score
 }
 
-func check_close(table *s_table, x int, y int, color string) bool {
+func check_close(table *s_table, x int, y int, color uint8) bool {
 	size := table.size
 
 	for i := -1; i <= 1; i++ {
 		for j := -1; j <= 1; j++ {
 			if inbounds(size, x + i, y + j) {
-				if table.cells[(y + j) * size + (x + i)] != "" {
+				if table.cells[(y + j) * size + (x + i)] != 0 {
 					return true
 				}
 			}
@@ -183,19 +183,19 @@ func check_close(table *s_table, x int, y int, color string) bool {
 	return false
 }
 
-func check_win(table *s_table, x int, y int, color string) float64 {
+func check_win(table *s_table, x int, y int, color uint8) float64 {
 	score := float64(0)
 
 	if verifWinPoint(table, x, y, color) {
 		score = 10000
 	}
-	if getCapturedStones(table, color) == 4 && verifCapturePossible(table, color).x != -1 {
+	if getCapturedStones(table, color) == 4 && len(verifCapturePossible(table, color)) > 0 {
 		score += 10000
 	}
 	return score
 }
 
-func check_lose(table *s_table, x int, y int, color string) float64 {
+func check_lose(table *s_table, x int, y int, color uint8) float64 {
 	score := float64(0)
 
 	opponent := opponentColor(color)
@@ -203,25 +203,25 @@ func check_lose(table *s_table, x int, y int, color string) float64 {
 	if verifWinPoint(table, x, y, opponent) {
 		score = -9000
 	}
-	if getCapturedStones(table, opponent) == 4 && verifCapturePossible(table, opponent).x != -1 {
+	if getCapturedStones(table, opponent) == 4 && len(verifCapturePossible(table, opponent)) > 0 {
 		score += -9000
 	}
 	return score
 }
 
-func check_capture_possible(table *s_table, color string) float64 {
+func check_capture_possible(table *s_table, color uint8) float64 {
 	score := float64(0)
 
-	if verifCapturePossible(table, color).x != -1 {
+	if len(verifCapturePossible(table, color)) > 0 {
 		score = 1000
 	}
-	if verifCapturePossible(table, opponentColor(color)).x != -1 {
+	if len(verifCapturePossible(table, opponentColor(color))) > 0 {
 		score = -1000
 	}
 	return score
 }
 
-func evaluateTable(table *s_table, color string) float64 {
+func evaluateTable(table *s_table, color uint8) float64 {
 	score := float64(0)
 	size := table.size
 
@@ -237,7 +237,7 @@ func evaluateTable(table *s_table, color string) float64 {
 	return score
 }
 
-func check_allignments(table *s_table, x int, y int, color string) float64 {
+func check_allignments(table *s_table, x int, y int, color uint8) float64 {
 	score := float64(0)
 	size := table.size
 

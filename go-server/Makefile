@@ -1,4 +1,4 @@
-SRC_FILE := server.go \
+SRCS_FILE := server.go \
 			struct.go \
 			IA.go \
 
