@@ -82,7 +82,7 @@ func testCapture() {
 	putStone(&test_table, 11, 12, "w")
 
 	putStone(&test_table, 10, 10, "w")
-	putStone(&test_table, 12, 10, "b")
+	putStone(&test_table, 18, 18, "b")
 
 	printTable(&test_table)
 
@@ -162,12 +162,22 @@ func testWin() {
 	printTable(&test_table)
 }
 
+func testIA() {
+	fmt.Println("\nTest IA scenario")
+	fmt.Println("-----------------")
+	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
+	putStone(&test_table, 5, 5, "b")
+	putStone(&test_table, 6, 5, "w")
+	printTable(&test_table)
+	IAMain(test_table, "w")
+}
 
 func main() {
 	// test()
-	testCapture()
+	// testCapture()
 	// testIllegalMove()
 	// testWin()
+	testIA()
 
 
 	
