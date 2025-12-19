@@ -25,7 +25,8 @@
             gopls
             air
             golangci-lint
-
+            gotools
+            
             # --- CLIENT TUI (PYTHON) ---
             pythonEnv
 
@@ -36,6 +37,7 @@
           ];
 
           shellHook = ''
+            echo -ne "\033]0;GOMOKU\007"
             echo "🚀 Environnement Gomoku chargé !"
             echo "--------------------------------"
             echo "Backend : $(go version)"

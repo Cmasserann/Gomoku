@@ -2,10 +2,9 @@ package main
 
 import "fmt"
 
-
 type s_table struct {
 	size int
-	cells [19*19]uint8
+	cells [gobanSize]uint8
 	captured_b int
 	captured_w int
 }
@@ -29,6 +28,7 @@ var directions = [][2]int{
 			{1, -1}, // diagonal /
 		}
 
+// Place a stone on the table at (x, y) with the given color (1 for black, 2 for white).
 func putStone(table *s_table, x int, y int, color uint8) bool {
 	size := table.size
 	if illegalMove(table, x, y, color) {
