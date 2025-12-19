@@ -16,7 +16,7 @@ build_inspect:
 	go build -x -work -o ${BIN_DIR}/server ${SRCS}
 
 clean:
-	rm -rf ${BIN_DIR} /tmp/*.o /tmp/*.a
+	rm -rf ${BIN_DIR}	
 
 remake:
 	fclean all
