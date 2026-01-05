@@ -265,23 +265,21 @@ func freeThrees(table *s_table, x int, y int, color uint8) int {
 }
 
 func illegalMove(table *s_table, x int, y int, color uint8) bool {
-	if !inbounds(table.size, x, y) {
-		fmt.Println("Out of bounds")
+	if !inbounds(table.size, x, y) || table.cells[y*table.size+x] != 0 ||
+		color != 1 && color != 2 || freeThrees(table, x, y, color) >= 2 {
 		return true
 	}
 	
-	if table.cells[y*table.size+x] != 0 {
-		fmt.Println("Cell already occupied")
-		return true
-	}
+	// if table.cells[y*table.size+x] != 0 {
+	// 	return true
+	// }
 	
-	if color != 1 && color != 2 {
-		fmt.Println("Invalid color")
-		return true
-	}
+	// if color != 1 && color != 2 {
+	// 	return true
+	// }
 	
-	if freeThrees(table, x, y, color) >= 2 {
-		return true
-	}
+	// if freeThrees(table, x, y, color) >= 2 {
+	// 	return true
+	// }
 	return false
 }
