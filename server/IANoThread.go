@@ -61,7 +61,7 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 		scoreMove = append(scoreMove, s_ScorePos{pos: move, score: score})
 	}
 
-
+	// Find the 95% best move
 	maxScore := -10000000000
 	var bestMove s_ScorePos
 	for _, sm := range scoreMove {
@@ -71,19 +71,48 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 		}
 	}
 
-	newTable := table
-	putStone(&newTable, bestMove.pos.x, bestMove.pos.y, color)
-	availableMovesTable = updateAvailableMoves(availableMovesTable, color, bestMove.pos.x, bestMove.pos.y)
-	result := RecursiveSearch(depth - 1, newTable, availableMovesTable, !AIMove, opponentColor(color))
-	if (AIMove) {
-		result.score = result.score + bestMove.score * pow10[depth]
-	} else {
-		result.score = result.score - bestMove.score * pow10[depth]
+	bestMoves := []s_ScorePos{}
+	uppurQuartile := maxScore * 75 / 100
+	for _, sm := range scoreMove {
+		if (sm.score >= uppurQuartile) {
+			newTable := table
+			putStone(&newTable, bestMove.pos.x, bestMove.pos.y, color)
+			availableMovesTable = updateAvailableMoves(availableMovesTable, color, bestMove.pos.x, bestMove.pos.y)
+			result := RecursiveSearch(depth - 1, newTable, availableMovesTable, !AIMove, opponentColor(color))
+			if (AIMove) {
+				result.score = result.score + bestMove.score * pow10[depth]
+			} else {
+				result.score = result.score - bestMove.score * pow10[depth]
+			}
+			result.pos = bestMove.pos
+			bestMoves = append(bestMoves, result)
+		}
 	}
-	result.pos = bestMove.pos
-	fmt.Println("Best Move at depth", depth, ":", bestMove)
-	fmt.Println("score:", result.score)
-	return result
+	fmt.Println("Best Moves at depth", depth, ":", bestMoves)
+	//max
+	maxScore = -1000000000
+	for _, bm := range bestMoves {
+		if (AIMove && bm.score > maxScore) || (!AIMove && bm.score < maxScore) {
+			maxScore = bm.score
+			bestMove = bm
+		}
+	}
+
+	return bestMove
+
+	// newTable := table
+	// putStone(&newTable, bestMove.pos.x, bestMove.pos.y, color)
+	// availableMovesTable = updateAvailableMoves(availableMovesTable, color, bestMove.pos.x, bestMove.pos.y)
+	// result := RecursiveSearch(depth - 1, newTable, availableMovesTable, !AIMove, opponentColor(color))
+	// if (AIMove) {
+	// 	result.score = result.score + bestMove.score * pow10[depth]
+	// } else {
+	// 	result.score = result.score - bestMove.score * pow10[depth]
+	// }
+	// result.pos = bestMove.pos
+	// fmt.Println("Best Move at depth", depth, ":", bestMove)
+	// fmt.Println("score:", result.score)
+	// return result
 }
 
 func checkAlignement(table *s_table, x int, y int, color uint8) int {
