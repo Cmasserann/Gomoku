@@ -1,4 +1,4 @@
-SRCS := main.go API.go struct.go
+SRCS := main.go API.go struct.go IA.go IANoThread.go
 
 
 BIN_DIR := ./bin
