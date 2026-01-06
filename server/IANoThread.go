@@ -25,7 +25,6 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 	
 	scoreMove := make([]s_ScorePos, len(moves))
 
-
 	for _, move := range moves {
 		score := 0
 		newTable := table
@@ -49,12 +48,14 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 		if (verifWinPoint(&newTable, move.x, move.y, color)) {
 			endDepth = depth
 			if (AIMove) {
-				if len(verifCapturePossible(&newTable, opponentColor(color))) > 0 {
+				captured := verifCapturePossible(&newTable, opponentColor(color))
+				if len(captured) + getCapturedStones(&newTable, opponentColor(color)) >= 5 {
 					continue
 				}
 				return s_ScorePos{pos: move, score: 10000000000}
 			} else {
-				if len(verifCapturePossible(&newTable, color)) > 0 {
+				captured := verifCapturePossible(&newTable, color)
+				if len(captured) + getCapturedStones(&newTable, color) >= 5 {
 					continue
 				}
 				return s_ScorePos{pos: move, score: -10000000000}
@@ -87,6 +88,11 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 		if (sm.score >= uppurQuartile) {
 			newTable := table
 			putStone(&newTable, bestMove.pos.x, bestMove.pos.y, color)
+			captured := capture(&newTable, bestMove.pos.x, bestMove.pos.y, color, color)
+			if len(captured) > 0 {
+				newTable = updateAvailableMovesAfterCapture(newTable, color, captured)
+			}
+
 			availableMovesTable = updateAvailableMoves(availableMovesTable, color, bestMove.pos.x, bestMove.pos.y)
 			result := RecursiveSearch(depth - 1, newTable, availableMovesTable, !AIMove, opponentColor(color))
 			// fmt.Println("Result of move", sm, "at depth", depth, ":", result)
@@ -139,4 +145,24 @@ func checkOneDirection(table *s_table, x int, y int, color uint8, dx int, dy int
 		}
 	}
 	return count
+}
+
+func updateAvailableMovesAfterCapture(table s_table, color uint8, capturedStones []s_StonesPos) s_table {
+	size := table.size
+	for _, pos := range capturedStones {
+		x := pos.x
+		y := pos.y
+		for i := -1; i <= 1; i++ {
+			for j := -1; j <= 1; j++ {
+				nx := x + i
+				ny := y + j
+				if inbounds(size, nx, ny) && table.cells[ny*size+nx] == 0 {
+					if check_close(&table, nx, ny, color) {
+						table.cells[ny * size + nx] = 1
+					}
+				}
+			}
+		}
+	}
+	return table
 }

@@ -70,7 +70,7 @@ func TestIAWinAfterLoseAlign(t *testing.T) {
 }
 
 func TestIADontLoseByCapture(t *testing.T) {
-	test_table := s_table{ size: 19, captured_b: 0, captured_w: 4 }
+	test_table := s_table{ size: 19, captured_b: 4, captured_w: 0 }
 	putStone(&test_table, 4, 5, 2)
 	putStone(&test_table, 5, 5, 2)
 	putStone(&test_table, 6, 5, 1)
@@ -87,14 +87,14 @@ func TestIADontLoseByCapture(t *testing.T) {
 }
 
 func TestIADontLoseByCapture2(t *testing.T) {
-	test_table := s_table{ size: 19, captured_b: 0, captured_w: 4 }
+	test_table := s_table{ size: 19, captured_b: 4, captured_w: 0 }
 	putStone(&test_table, 5, 6, 2)
 	putStone(&test_table, 5, 7, 2)
 	putStone(&test_table, 5, 8, 2)
 	putStone(&test_table, 5, 9, 2)
 	putStone(&test_table, 4, 5, 2)
 	putStone(&test_table, 6, 5, 1)
-	
+
 	result := IAMainNoThread(test_table, 2)
 	if result.x == -1 && result.y == -1 {
 		t.Error("Expected IA to play a move, got no move")
