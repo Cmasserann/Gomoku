@@ -166,7 +166,7 @@ func testIA() {
 	putStone(&test_table, 5, 5, 1)
 	putStone(&test_table, 6, 5, 2)
 	printTable(&test_table)
-	IAMainNoThread(test_table, 2)
+	getIAMove(test_table, 2)
 }
 
 func main() {

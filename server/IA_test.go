@@ -2,10 +2,11 @@ package main
 
 import "testing"
 
-func TestIAMainNoThread(t *testing.T) {
+func test_getIAMove(t *testing.T) {
 	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
 	putStone(&test_table, 5, 5, 1)
-	result := IAMainNoThread(test_table, 2)
+	
+	result := getIAMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
 		t.Error("Expected IA to play a move, got no move")
 	}
@@ -19,7 +20,8 @@ func TestIAWinCapture(t *testing.T) {
 	putStone(&test_table, 5, 5, 1)
 	putStone(&test_table, 6, 5, 1)
 	putStone(&test_table, 7, 5, 2)
-	result := IAMainNoThread(test_table, 2)
+
+	result := getIAMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
 		t.Error("Expected IA to play a move, got no move")
 	}
@@ -37,7 +39,8 @@ func TestIAWinAlign(t *testing.T) {
 	putStone(&test_table, 6, 5, 2)
 	putStone(&test_table, 7, 5, 2)
 	putStone(&test_table, 8, 5, 2)
-	result := IAMainNoThread(test_table, 2)
+
+	result := getIAMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
 		t.Error("Expected IA to play a move, got no move")
 	}
@@ -57,7 +60,8 @@ func TestIAWinAfterLoseAlign(t *testing.T) {
 	putStone(&test_table, 6, 5, 1)
 	putStone(&test_table, 7, 5, 1)
 	putStone(&test_table, 8, 5, 1)
-	result := IAMainNoThread(test_table, 2)
+
+	result := getIAMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
 		t.Error("Expected IA to play a move, got no move")
 	}
@@ -74,7 +78,8 @@ func TestIADontLoseByCapture(t *testing.T) {
 	putStone(&test_table, 4, 5, 2)
 	putStone(&test_table, 5, 5, 2)
 	putStone(&test_table, 6, 5, 1)
-	result := IAMainNoThread(test_table, 2)
+
+	result := getIAMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
 		t.Error("Expected IA to play a move, got no move")
 	}
@@ -95,7 +100,7 @@ func TestIADontLoseByCapture2(t *testing.T) {
 	putStone(&test_table, 4, 5, 2)
 	putStone(&test_table, 6, 5, 1)
 
-	result := IAMainNoThread(test_table, 2)
+	result := getIAMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
 		t.Error("Expected IA to play a move, got no move")
 	}
@@ -108,7 +113,7 @@ func TestIADontLoseByCapture2(t *testing.T) {
 	
 	putStone(&test_table, 4, 10, 2)
 	putStone(&test_table, 6, 10, 1)
-	result = IAMainNoThread(test_table, 2)
+	result = getIAMove(test_table, 2)
 	if result.x == 5 && result.y == 10 {
 		t.Error("Expected IA to not play at (5,10) to avoid capture loss, got:", result)
 	}
