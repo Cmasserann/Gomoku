@@ -17,6 +17,9 @@ def send_move(x, y, color):
     payload = {"x": x, "y": y, "color": color}
     try:
         response = requests.post(f"{URL_BASE}/move", json=payload)
+        if response.status_code != 200:
+            print(f"Move rejected: {response.json().get('status', 'Unknown error')}")
+            return None
         return response.json()
     except Exception as e:
         print(f"Error : {e}")
@@ -71,7 +74,8 @@ def main():
         print(f"Envoi du coup ({x_input}, {y_input})...")
         board = send_move(x_input, y_input, my_color)
 
-        current_board_data = wait_for_change(board)
+        if board:
+            current_board_data = wait_for_change(board)
 
 if __name__ == "__main__":
     main()
