@@ -42,9 +42,9 @@ func setRouter(router *gin.Engine) {
 		}
 
 
-		validMove := putStone(&goban, req.X, req.Y, uint8(req.Color))
+		validMove := playTurn(&goban, req.X, req.Y, uint8(req.Color))
 
-		if !validMove {
+		if validMove == -1 {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Coup invalide"})
 			return
 		}
@@ -52,6 +52,14 @@ func setRouter(router *gin.Engine) {
 
 		fmt.Printf("Coup reçu : Joueur %d en (%d, %d)\n", req.Color, req.X, req.Y)
 
+		if validMove == 1 {
+			c.JSON(http.StatusOK, gin.H{
+				"message": "Coup accepté - Victoire !",
+				"board":   convertGobanTo2D(&goban.cells),
+			})
+			goban = s_table{size: gobanWidth, captured_b: 0, captured_w: 0}
+			return
+		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Coup accepté",
