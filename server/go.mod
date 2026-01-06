@@ -1,4 +1,4 @@
-module github.com/cmasserann/gomoku/go-server
+module github.com/cmasserann/gomoku/server
 
 go 1.24.0
 
