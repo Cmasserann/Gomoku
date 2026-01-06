@@ -10,10 +10,10 @@ type s_ScorePos struct {
 	score int
 }
 
-var depth = 8
+var depth = 10
 
 var pow10 = []int{
-	1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000,
+	1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000,
 }
 
 func opponentColor(color uint8) uint8 {
@@ -115,6 +115,7 @@ func updateAvailableMoves(table s_table, color uint8, x int, y int) s_table {
 			}
 		}
 	}
+	table.cells[y*size+x] = 0
 	return table
 }
 

@@ -1,0 +1,168 @@
+package main
+
+import (
+	"fmt"
+)
+
+var endDepth = 0
+
+func IAMainNoThread(table s_table, color uint8) s_StonesPos {
+	endDepth = 0
+	availableMovesTable := setAvailableMoves(table, color)
+
+	resultRecurse := RecursiveSearch(depth, table, availableMovesTable, true, color)
+
+	fmt.Println("IA possible positions:", resultRecurse)
+	return resultRecurse.pos
+}
+
+func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMove bool, color uint8) s_ScorePos {
+	moves := getAvailableMoves(availableMovesTable, color)
+	
+	if (endDepth != 0 && depth <= endDepth) || depth == 0 || len(moves) == 0 {
+		return s_ScorePos{pos: s_StonesPos{x: -1, y: -1}, score: 0}
+	}
+	
+	scoreMove := make([]s_ScorePos, len(moves))
+
+	for _, move := range moves {
+		score := 0
+		newTable := table
+		if (illegalMove(&newTable, move.x, move.y, color)) {
+			continue
+		}
+		
+		putStone(&newTable, move.x, move.y, color)
+
+		capture := capture(&newTable, move.x, move.y, color, color)
+
+		if (getCapturedStones(&newTable, color) >= 5) {
+			endDepth = depth
+			if (AIMove) {
+				return s_ScorePos{pos: move, score: 10000000000}
+			} else {
+				return s_ScorePos{pos: move, score: -10000000000}
+			}
+		}
+
+		if (verifWinPoint(&newTable, move.x, move.y, color)) {
+			endDepth = depth
+			if (AIMove) {
+				captured := verifCapturePossible(&newTable, opponentColor(color))
+				if len(captured) + getCapturedStones(&newTable, opponentColor(color)) >= 5 {
+					continue
+				}
+				return s_ScorePos{pos: move, score: 10000000000}
+			} else {
+				captured := verifCapturePossible(&newTable, color)
+				if len(captured) + getCapturedStones(&newTable, color) >= 5 {
+					continue
+				}
+				return s_ScorePos{pos: move, score: -10000000000}
+			}
+		}
+
+
+		if len(capture) > 0 {
+			score += 500
+		}
+		score += checkAlignement(&newTable, move.x, move.y, color)
+		score += checkAlignement(&newTable, move.x, move.y, opponentColor(color))
+		scoreMove = append(scoreMove, s_ScorePos{pos: move, score: score})
+	}
+
+	// fmt.Println("Score moves at depth", depth, ":", scoreMove)
+	maxScore := -10000000000
+	var bestMove s_ScorePos
+	for _, sm := range scoreMove {
+		if (sm.score > maxScore) {
+			maxScore = sm.score
+			bestMove = sm
+		}
+	}
+	// fmt.Println("Best move at depth", depth, ":", bestMove)
+
+	bestMoves := []s_ScorePos{}
+	uppurQuartile := maxScore * 75 / 100
+	for _, sm := range scoreMove {
+		if (sm.score >= uppurQuartile) {
+			newTable := table
+			putStone(&newTable, bestMove.pos.x, bestMove.pos.y, color)
+			captured := capture(&newTable, bestMove.pos.x, bestMove.pos.y, color, color)
+			if len(captured) > 0 {
+				newTable = updateAvailableMovesAfterCapture(newTable, color, captured)
+			}
+
+			availableMovesTable = updateAvailableMoves(availableMovesTable, color, bestMove.pos.x, bestMove.pos.y)
+			result := RecursiveSearch(depth - 1, newTable, availableMovesTable, !AIMove, opponentColor(color))
+			// fmt.Println("Result of move", sm, "at depth", depth, ":", result)
+			if (AIMove) {
+				result.score = result.score + bestMove.score * pow10[depth]
+			} else {
+				result.score = result.score - bestMove.score * pow10[depth]
+			}
+			result.pos = bestMove.pos
+			bestMoves = append(bestMoves, result)
+		}
+	}
+	// fmt.Println("Best Moves at depth", depth, ":", bestMoves)
+	maxScore = -1000000000
+	for _, bm := range bestMoves {
+		if (AIMove && bm.score > maxScore) || (!AIMove && bm.score < maxScore) {
+			maxScore = bm.score
+			bestMove = bm
+		}
+	}
+
+	return bestMove
+}
+
+func checkAlignement(table *s_table, x int, y int, color uint8) int {
+	count := 0
+
+	for i := -1 ; i <= 1; i += 2 {
+		count += checkOneDirection(table, x, y, color, 1 * i, 0)
+		count += checkOneDirection(table, x, y, color, 0, 1 * i)
+		count += checkOneDirection(table, x, y, color, 1 * i, 1 * i)
+		count += checkOneDirection(table, x, y, color, 1 * i, -1 * i)
+	}
+	return count
+}
+
+func checkOneDirection(table *s_table, x int, y int, color uint8, dx int, dy int) int {
+	size := table.size
+	count := 0
+
+	for i := 1; i <= 4; i++ {
+		nx := x + i * dx
+		ny := y + i * dy
+		if inbounds(size, nx, ny) && table.cells[ny * size + nx] == color {
+			count++
+		} else if count > 0 {
+			return pow10[count]
+		} else {
+			break
+		}
+	}
+	return count
+}
+
+func updateAvailableMovesAfterCapture(table s_table, color uint8, capturedStones []s_StonesPos) s_table {
+	size := table.size
+	for _, pos := range capturedStones {
+		x := pos.x
+		y := pos.y
+		for i := -1; i <= 1; i++ {
+			for j := -1; j <= 1; j++ {
+				nx := x + i
+				ny := y + j
+				if inbounds(size, nx, ny) && table.cells[ny*size+nx] == 0 {
+					if check_close(&table, nx, ny, color) {
+						table.cells[ny * size + nx] = 1
+					}
+				}
+			}
+		}
+	}
+	return table
+}
