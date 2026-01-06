@@ -38,6 +38,21 @@ func putStone(table *s_table, x int, y int, color uint8) bool {
 	return true
 }
 
+func playTurn(table *s_table, x int, y int, color uint8) int {
+	if illegalMove(table, x, y, color) {
+		return -1
+	}
+	
+	table.cells[y*table.size+x] = color
+	capture(table, x, y, color, color)
+
+	if verifWinPoint(table, x, y, color) || getCapturedStones(table, color) >= 5 {
+		return 1
+	}
+
+	return 0
+}
+
 func printTable(table *s_table) {
 	size := table.size
 
