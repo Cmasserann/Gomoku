@@ -266,7 +266,7 @@ func freeThrees(table *s_table, x int, y int, color uint8) int {
 				inbounds(size, end_x, end_y) {
 				if table.cells[next_y*size+next_x] == color &&
 					table.cells[mid_y*size+mid_x] == color &&
-					table.cells[end_y*size+end_x] == 0 {
+					table.cells[end_y*size+end_x] == 0  && i == -1 {
 						count++
 				} else if table.cells[next_y*size+next_x] == color &&
 					table.cells[mid_y*size+mid_x] == 0 &&
