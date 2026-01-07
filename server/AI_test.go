@@ -53,7 +53,7 @@ func TestAIWinAlign(t *testing.T) {
 }
 
 func TestAIWinAfterLoseAlign(t *testing.T) {
-	test_table := s_table{ size: 19, captured_b: 4, captured_w: 0 }
+	test_table := s_table{ size: 19, captured_b: 0, captured_w: 4 }
 	putStone(&test_table, 5, 4, 2)
 	putStone(&test_table, 5, 5, 1)
 	putStone(&test_table, 5, 6, 1)
