@@ -221,67 +221,46 @@ func capture(table *s_table, x int, y int, color uint8, endColor uint8) []s_Ston
 }
 
 func freeThrees(table s_table, x int, y int, color uint8) int {
+	count := 0
 	newTable := table
 	newTable.cells[y*table.size+x] = color
 	
+	if (verifWinPoint(&newTable, x, y, color)) {
+		return 0
+	}
+
+	for _, dir := range directions {
+		dx := dir[0]
+		dy := dir[1]
+		if directionalFreeThree(table, x, y, color, dx, dy) {
+			count++
+		}
+	}
+
+	return count
+}
+
+func directionalFreeThree(table s_table, x int, y int, color uint8, dx int, dy int) bool {
 	size := table.size
 	count := 0
-	for i := -1; i <= 1; i += 2 {
-		for _, dir := range directions {
 
-			dx := dir[0] * i
-			dy := dir[1] * i
-
-			next_x := x + dx
-			next_y := y + dy
-			mid_x := x + 2 * dx
-			mid_y := y + 2 * dy
-			end_x := x + 3 * dx
-			end_y := y + 3 * dy
-
-			if inbounds(size, next_x, next_y) &&
-				inbounds(size, mid_x, mid_y) &&
-				inbounds(size, end_x, end_y) {
-				if newTable.cells[next_y*size+next_x] == color &&
-					newTable.cells[mid_y*size+mid_x] == color &&
-					newTable.cells[end_y*size+end_x] == 0 {
-						count++
-				} else if newTable.cells[next_y*size+next_x] == color &&
-					newTable.cells[mid_y*size+mid_x] == 0 &&
-					newTable.cells[end_y*size+end_x] == color {
-						count++
-				} else if newTable.cells[next_y*size+next_x] == 0 &&
-					newTable.cells[mid_y*size+mid_x] == color &&
-					newTable.cells[end_y*size+end_x] == color {
-						count++
-				}
-			}
-
-			next_x = x - dx
-			next_y = y - dy
-			mid_x = x + 1 * dx
-			mid_y = y + 1 * dy
-			end_x = x + 2 * dx
-			end_y = y + 2 * dy
-
-			if inbounds(size, next_x, next_y) &&
-				inbounds(size, mid_x, mid_y) &&
-				inbounds(size, end_x, end_y) &&
-				verifWinPoint(&newTable, x, y, color) == false {
-				if newTable.cells[next_y*size+next_x] == color &&
-					newTable.cells[mid_y*size+mid_x] == color &&
-					newTable.cells[end_y*size+end_x] == 0  && i == -1 {
-						count++
-				} else if newTable.cells[next_y*size+next_x] == color &&
-					newTable.cells[mid_y*size+mid_x] == 0 &&
-					newTable.cells[end_y*size+end_x] == color {
-						count++
-				} 
+	for n := -1 ; n <= 1; n += 2 {
+		for i := 1; i <= 4; i++ {
+			nx := x + i * dx * n
+			ny := y + i * dy * n
+			if !inbounds(size, nx, ny) || table.cells[ny * size + nx] == opponentColor(color) {
+				break
+			} else if table.cells[ny * size + nx] == color{
+				count++
 			}
 		}
 	}
-	return count
+	if count >= 2 {
+		return true
+	}
+	return false
 }
+
 
 func illegalMove(table *s_table, x int, y int, color uint8) bool {
 	if !inbounds(table.size, x, y) || table.cells[y*table.size+x] != 0 ||

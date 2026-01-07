@@ -11,12 +11,15 @@ func opponentColor(color uint8) uint8 {
 func checkAlignement(table *s_table, x int, y int, color uint8) int {
 	count := 0
 
-	count += checkOneDirection(table, x, y, color, 1, 0)
-	count += checkOneDirection(table, x, y, color, 0, 1)
-	count += checkOneDirection(table, x, y, color, 1, 1)
-	count += checkOneDirection(table, x, y, color, 1, -1)
+
+	for _, dir := range directions {
+		dx := dir[0]
+		dy := dir[1]
+		count += checkOneDirection(table, x, y, color, dx, dy)
+	}
 	return count
 }
+
 
 func checkOneDirection(table *s_table, x int, y int, color uint8, dx int, dy int) int {
 	size := table.size
