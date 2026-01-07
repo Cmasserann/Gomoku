@@ -67,7 +67,14 @@ func setRouter(router *gin.Engine) {
 			"board":   convertGobanTo2D(&goban.cells),
 		})
 
-		timedAIMove(&goban, 2)
+		if timedAIMove(&goban, 2) {
+			c.JSON(http.StatusOK, gin.H{
+				"message": "L'IA a gagné !",
+				"board":   convertGobanTo2D(&goban.cells),
+			})
+			goban = s_table{size: gobanWidth, captured_b: 0, captured_w: 0}
+			return
+		}
 
 	})
 
@@ -128,12 +135,16 @@ func convertGobanTo2D(goban *[gobanSize]uint8) [][]int {
 	return board2D
 }
 
-func timedAIMove(goban *s_table, color uint8) {
+func timedAIMove(goban *s_table, color uint8) bool{
 
 	start := time.Now()
-	move := IAMainNoThread(*goban, color)
+	move := getAIMove(*goban, color)
 	elapsed := time.Since(start)
-	putStone(goban, move.x, move.y, color)
+	valideMove := playTurn(goban, move.x, move.y, color)
 
 	fmt.Printf("AI move computed in %s\n", elapsed)
+	if valideMove == 1 {
+		return true
+	}
+	return false
 }
