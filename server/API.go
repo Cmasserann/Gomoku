@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,7 +38,7 @@ func setRouter(router *gin.Engine) {
 
 
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Données invalides (besoin de x, y, color)"})
+			c.JSON(http.StatusBadRequest, gin.H{"status": "Données invalides (besoin de x, y, color)"})
 			return
 		}
 
@@ -62,9 +63,12 @@ func setRouter(router *gin.Engine) {
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"message": "Coup accepté",
+			"status": "Coup accepté",
 			"board":   convertGobanTo2D(&goban.cells),
 		})
+
+		timedAIMove(&goban, 2)
+
 	})
 
 	router.POST("/debug", func(c *gin.Context) {
@@ -122,4 +126,14 @@ func convertGobanTo2D(goban *[gobanSize]uint8) [][]int {
 		}
 	}
 	return board2D
+}
+
+func timedAIMove(goban *s_table, color uint8) {
+
+	start := time.Now()
+	move := IAMainNoThread(*goban, color)
+	elapsed := time.Since(start)
+	putStone(goban, move.x, move.y, color)
+
+	fmt.Printf("AI move computed in %s\n", elapsed)
 }
