@@ -133,11 +133,11 @@ func TestFreeThree(t *testing.T) {
 	putStone(&test_table, 10, 9, 2)
 	putStone(&test_table, 9, 10, 2)
 	putStone(&test_table, 7, 10, 2)
-	result := freeThrees(&test_table, 10, 10, 2)
+	result := freeThrees(test_table, 10, 10, 2)
 	if result == 0 {
 		t.Error("Expected freeThree to not return 0 for white, got: ", result)
 	}
-	result = freeThrees(&test_table, 10, 10, 1)
+	result = freeThrees(test_table, 10, 10, 1)
 	if result != 0 {
 		t.Error("Expected freeThree to 0 for black, got: ", result)
 	}
@@ -148,7 +148,7 @@ func TestFreeThree(t *testing.T) {
 	putStone(&test_table, 3, 3, 2)
 	putStone(&test_table, 3, 1, 2)
 	putStone(&test_table, 4, 1, 2)
-	result = freeThrees(&test_table, 1, 1, 2)
+	result = freeThrees(test_table, 1, 1, 2)
 	if result == 0 {
 		t.Error("Expected freeThree to not return 0 for white at (0,0), got: ", result)
 	}

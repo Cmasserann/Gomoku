@@ -11,34 +11,39 @@ func opponentColor(color uint8) uint8 {
 func checkAlignement(table *s_table, x int, y int, color uint8) int {
 	count := 0
 
-	for i := -1 ; i <= 1; i += 2 {
-		count += checkOneDirection(table, x, y, color, 1 * i, 0)
-		count += checkOneDirection(table, x, y, color, 0, 1 * i)
-		count += checkOneDirection(table, x, y, color, 1 * i, 1 * i)
-		count += checkOneDirection(table, x, y, color, 1 * i, -1 * i)
-	}
+	count += checkOneDirection(table, x, y, color, 1, 0)
+	count += checkOneDirection(table, x, y, color, 0, 1)
+	count += checkOneDirection(table, x, y, color, 1, 1)
+	count += checkOneDirection(table, x, y, color, 1, -1)
 	return count
 }
 
 func checkOneDirection(table *s_table, x int, y int, color uint8, dx int, dy int) int {
 	size := table.size
 	count := 0
+	end := 0
 
-	for i := 1; i <= 4; i++ {
-		nx := x + i * dx
-		ny := y + i * dy
-		if inbounds(size, nx, ny) && table.cells[ny * size + nx] == color {
-			count++
-		} else if count > 0 {
-			if table.cells[ny * size + nx] != 0 {
-				return pow10[count + 1]
+	for n := -1 ; n <= 1; n += 2 {
+		for i := 1; i <= 4; i++ {
+			nx := x + i * dx * n
+			ny := y + i * dy * n
+			if !inbounds(size, nx, ny) || table.cells[ny * size + nx] != color {
+				if end != 0 {
+					end++
+				}
+				break
+			} else {
+				count++
 			}
-			return pow10[count]
-		} else {
-			break
 		}
 	}
-	return count
+	if count == 3 && end == 2 {
+		return 5000
+	}
+	if count == 4 {
+		return 100000
+	}
+	return pow10[count - end]
 }
 
 func setAvailableMoves(table s_table, color uint8) s_table {

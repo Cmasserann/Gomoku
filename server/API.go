@@ -138,7 +138,7 @@ func convertGobanTo2D(goban *[gobanSize]uint8) [][]int {
 func timedAIMove(goban *s_table, color uint8) bool{
 
 	start := time.Now()
-	move := IAMainNoThread(*goban, color)
+	move := getIAMove(*goban, color)
 	elapsed := time.Since(start)
 	valideMove := playTurn(goban, move.x, move.y, color)
 

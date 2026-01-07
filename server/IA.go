@@ -52,7 +52,6 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 			scoreMove = make([]s_ScorePos, 0)
 			scoreMove = append(scoreMove, s_ScorePos{pos: move, score: 10000000000})
 			break
-			// return s_ScorePos{pos: move, score: 10000000000}
 		}
 
 		if (verifWinPoint(&newTable, move.x, move.y, color)) {
@@ -64,19 +63,17 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 			scoreMove = make([]s_ScorePos, 0)
 			scoreMove = append(scoreMove, s_ScorePos{pos: move, score: 10000000000})
 			break
-			// return s_ScorePos{pos: move, score: 10000000000}
 		}
 
 
 		if len(capture) > 0 {
-			score += 500
+			score += 300
 		}
 		score += checkAlignement(&newTable, move.x, move.y, color)
 		score += checkAlignement(&newTable, move.x, move.y, opponentColor(color))
 		scoreMove = append(scoreMove, s_ScorePos{pos: move, score: score})
 	}
 
-	// fmt.Println("Score moves at depth", depth, ":", scoreMove)
 	maxScore := -10000000000
 	var bestMove s_ScorePos
 	for _, sm := range scoreMove {
@@ -85,10 +82,20 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 			bestMove = sm
 		}
 	}
-	// fmt.Println("Best move at depth", depth, ":", bestMove)
 
-	bestMoves := []s_ScorePos{}
-	uppurQuartile := maxScore * 75 / 100
+	minScore := 10000000000
+	for _, sm := range scoreMove {
+		if (sm.score < minScore) {
+			minScore = sm.score
+		}
+	}
+
+
+	bestMoves := make([]s_ScorePos, 0)
+	// uppurQuartile := maxScore * 75 / 100
+	uppurQuartile := minScore + (maxScore - minScore) * 75 / 100
+	// fmt.Println("Score Moves at depth", depth, ":", scoreMove)
+	// fmt.Println("Depth", depth, "MaxScore:", maxScore, "MinScore:", minScore, "UppurQuartile:", uppurQuartile)
 	for _, sm := range scoreMove {
 		if (sm.score >= uppurQuartile) {
 			newTable := table
@@ -111,7 +118,7 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 		}
 	}
 	// fmt.Println("Best Moves at depth", depth, ":", bestMoves)
-	maxScore = -1000000000
+	maxScore = 0
 	for _, bm := range bestMoves {
 		if (AIMove && bm.score > maxScore) || (!AIMove && bm.score < maxScore) {
 			maxScore = bm.score
