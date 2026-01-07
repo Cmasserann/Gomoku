@@ -17,7 +17,7 @@ var pow10 = []int{
 
 var endDepth = 0
 
-func getIAMove(table s_table, color uint8) s_StonesPos {
+func getAIMove(table s_table, color uint8) s_StonesPos {
 	endDepth = 0
 	availableMovesTable := setAvailableMoves(table, color)
 

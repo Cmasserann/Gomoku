@@ -2,57 +2,57 @@ package main
 
 import "testing"
 
-func test_getIAMove(t *testing.T) {
+func test_getAIMove(t *testing.T) {
 	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
 	putStone(&test_table, 5, 5, 1)
 	
-	result := getIAMove(test_table, 2)
+	result := getAIMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
-		t.Error("Expected IA to play a move, got no move")
+		t.Error("Expected AI to play a move, got no move")
 	}
 	if illegalMove(&test_table, result.x, result.y, 2) {
-		t.Error("Expected IA to play a legal move, got illegal move at:", result)
+		t.Error("Expected AI to play a legal move, got illegal move at:", result)
 	}
 }
 
-func TestIAWinCapture(t *testing.T) {
+func TestAIWinCapture(t *testing.T) {
 	test_table := s_table{ size: 19, captured_b: 0, captured_w: 4 }
 	putStone(&test_table, 5, 5, 1)
 	putStone(&test_table, 6, 5, 1)
 	putStone(&test_table, 7, 5, 2)
 
-	result := getIAMove(test_table, 2)
+	result := getAIMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
-		t.Error("Expected IA to play a move, got no move")
+		t.Error("Expected AI to play a move, got no move")
 	}
 	if illegalMove(&test_table, result.x, result.y, 2) {
-		t.Error("Expected IA to play a legal move, got illegal move at:", result)
+		t.Error("Expected AI to play a legal move, got illegal move at:", result)
 	}
 	if !(result.x == 4 && result.y == 5) {
-		t.Error("Expected IA to play at (4,5) to win by capture, got:", result)
+		t.Error("Expected AI to play at (4,5) to win by capture, got:", result)
 	}
 }
 
-func TestIAWinAlign(t *testing.T) {
+func TestAIWinAlign(t *testing.T) {
 	test_table := s_table{ size: 19, captured_b: 0, captured_w: 0 }
 	putStone(&test_table, 5, 5, 2)
 	putStone(&test_table, 6, 5, 2)
 	putStone(&test_table, 7, 5, 2)
 	putStone(&test_table, 8, 5, 2)
 
-	result := getIAMove(test_table, 2)
+	result := getAIMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
-		t.Error("Expected IA to play a move, got no move")
+		t.Error("Expected AI to play a move, got no move")
 	}
 	if illegalMove(&test_table, result.x, result.y, 2) {
-		t.Error("Expected IA to play a legal move, got illegal move at:", result)
+		t.Error("Expected AI to play a legal move, got illegal move at:", result)
 	}
 	if !(result.x == 9 && result.y == 5 || result.x == 4 && result.y == 5) {
-		t.Error("Expected IA to play at (9,5) or (4,5) to win by alignment, got:", result)
+		t.Error("Expected AI to play at (9,5) or (4,5) to win by alignment, got:", result)
 	}
 }
 
-func TestIAWinAfterLoseAlign(t *testing.T) {
+func TestAIWinAfterLoseAlign(t *testing.T) {
 	test_table := s_table{ size: 19, captured_b: 4, captured_w: 0 }
 	putStone(&test_table, 5, 4, 2)
 	putStone(&test_table, 5, 5, 1)
@@ -61,37 +61,37 @@ func TestIAWinAfterLoseAlign(t *testing.T) {
 	putStone(&test_table, 7, 5, 1)
 	putStone(&test_table, 8, 5, 1)
 
-	result := getIAMove(test_table, 2)
+	result := getAIMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
-		t.Error("Expected IA to play a move, got no move")
+		t.Error("Expected AI to play a move, got no move")
 	}
 	if illegalMove(&test_table, result.x, result.y, 2) {
-		t.Error("Expected IA to play a legal move, got illegal move at:", result)
+		t.Error("Expected AI to play a legal move, got illegal move at:", result)
 	}
 	if !(result.x == 5 && result.y == 7) {
-		t.Error("Expected IA to play at (5,7) to block opponent win, got:", result)
+		t.Error("Expected AI to play at (5,7) to block opponent win, got:", result)
 	}
 }
 
-func TestIADontLoseByCapture(t *testing.T) {
+func TestAIDontLoseByCapture(t *testing.T) {
 	test_table := s_table{ size: 19, captured_b: 4, captured_w: 0 }
 	putStone(&test_table, 4, 5, 2)
 	putStone(&test_table, 5, 5, 2)
 	putStone(&test_table, 6, 5, 1)
 
-	result := getIAMove(test_table, 2)
+	result := getAIMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
-		t.Error("Expected IA to play a move, got no move")
+		t.Error("Expected AI to play a move, got no move")
 	}
 	if illegalMove(&test_table, result.x, result.y, 2) {
-		t.Error("Expected IA to play a legal move, got illegal move at:", result)
+		t.Error("Expected AI to play a legal move, got illegal move at:", result)
 	}
 	if !(result.x == 3 && result.y == 5) {
-		t.Error("Expected IA to play at (3,5) to avoid capture loss, got:", result)
+		t.Error("Expected AI to play at (3,5) to avoid capture loss, got:", result)
 	}
 }
 
-func TestIADontLoseByCapture2(t *testing.T) {
+func TestAIDontLoseByCapture2(t *testing.T) {
 	test_table := s_table{ size: 19, captured_b: 4, captured_w: 0 }
 	putStone(&test_table, 5, 6, 2)
 	putStone(&test_table, 5, 7, 2)
@@ -100,21 +100,21 @@ func TestIADontLoseByCapture2(t *testing.T) {
 	putStone(&test_table, 4, 5, 2)
 	putStone(&test_table, 6, 5, 1)
 
-	result := getIAMove(test_table, 2)
+	result := getAIMove(test_table, 2)
 	if result.x == -1 && result.y == -1 {
-		t.Error("Expected IA to play a move, got no move")
+		t.Error("Expected AI to play a move, got no move")
 	}
 	if illegalMove(&test_table, result.x, result.y, 2) {
-		t.Error("Expected IA to play a legal move, got illegal move at:", result)
+		t.Error("Expected AI to play a legal move, got illegal move at:", result)
 	}
 	if result.x == 5 && result.y == 5 {
-		t.Error("Expected IA to not play at (5,5) to avoid capture loss, got:", result)
+		t.Error("Expected AI to not play at (5,5) to avoid capture loss, got:", result)
 	}
 	
 	putStone(&test_table, 4, 10, 2)
 	putStone(&test_table, 6, 10, 1)
-	result = getIAMove(test_table, 2)
+	result = getAIMove(test_table, 2)
 	if result.x == 5 && result.y == 10 {
-		t.Error("Expected IA to not play at (5,10) to avoid capture loss, got:", result)
+		t.Error("Expected AI to not play at (5,10) to avoid capture loss, got:", result)
 	}
 }
