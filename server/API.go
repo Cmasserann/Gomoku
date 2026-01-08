@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+	"sync"
 	"time"
-
+	
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,96 +19,78 @@ type DebugRequest struct {
 	SplitedGoban [][]int `json:"board"`
 }
 
-func setRouter(router *gin.Engine) {
+type GameServer struct {
+	mu          sync.Mutex
+	goban       s_table
+	AIMode		bool
+	isBusy      bool
+	gameStarted bool
+}
 
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "pong"})
+func (gs *GameServer) handlePing(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "pong"})
+}
+
+func (gs *GameServer) handleGetBoard(c *gin.Context) {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+	
+	c.JSON(http.StatusOK, gin.H{
+		"board": convertGobanTo2D(&gs.goban.cells),
 	})
+}
 
-
-	router.GET("/board", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"board": convertGobanTo2D(&goban.cells),
-		})
-	})
-
-
-	router.POST("/move", func(c *gin.Context) {
-		var req MoveRequest
-
-
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "Données invalides (besoin de x, y, color)"})
-			return
-		}
-
-
-		validMove := playTurn(&goban, req.X, req.Y, uint8(req.Color))
-
-		if validMove == -1 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Coup invalide"})
-			return
-		}
-
-
-		fmt.Printf("Coup reçu : Joueur %d en (%d, %d)\n", req.Color, req.X, req.Y)
-
-		if validMove == 1 {
-			c.JSON(http.StatusOK, gin.H{
-				"message": "Coup accepté - Victoire !",
-				"board":   convertGobanTo2D(&goban.cells),
-			})
-			goban = s_table{size: gobanWidth, captured_b: 0, captured_w: 0}
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"status": "Coup accepté",
-			"board":   convertGobanTo2D(&goban.cells),
-		})
-
-		if timedAIMove(&goban, 2) {
-			c.JSON(http.StatusOK, gin.H{
-				"message": "L'IA a gagné !",
-				"board":   convertGobanTo2D(&goban.cells),
-			})
-			goban = s_table{size: gobanWidth, captured_b: 0, captured_w: 0}
-			return
-		}
-
-	})
-
-	router.POST("/debug", func(c *gin.Context) {
-		var req DebugRequest
-
-
-		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Donnée invalide (besoin de splited_goban)"})
-			return
-		}
-
-		newGoban := req.SplitedGoban
-
-		fmt.Println("Nouveau goban reçu :")
-		for i := 0; i < gobanWidth; i++ {
-			for j := 0; j < gobanWidth; j++ {
-				fmt.Printf("%d ", newGoban[i][j])
-			}
-			fmt.Println()
-		}
-
-		setGoban(&goban, newGoban)
-
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Goban mis à jour",
-			"board":   convertGobanTo2D(&goban.cells),
-		})
-	})
-
-
-	if err := router.Run(); err != nil {
-		log.Fatalf("failed to run server: %v", err)
+func (gs *GameServer) handleMove(c *gin.Context) {
+	var req MoveRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Données invalides"})
+		return
 	}
+
+	// On verrouille pour éviter les conflits
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+
+	// 1. Joueur humain
+	if !putStone(&gs.goban, req.X, req.Y, uint8(req.Color)) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "coup invalide"})
+		return
+	}
+	
+	fmt.Printf("Coup reçu : Joueur %d en (%d, %d)\n", req.Color, req.X, req.Y)
+	
+	c.JSON(http.StatusOK, gin.H{
+		"status": "Coup accepté et IA a répondu",
+		"board":  convertGobanTo2D(&gs.goban.cells),
+	})
+	
+	if gs.AIMode {
+		aiColor := uint8(2)
+		if req.Color == 2 { aiColor = 1 }
+		timedAIMove(&gs.goban, aiColor)
+	}
+}
+
+func (gs *GameServer) handleAISuggest(c *gin.Context) {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+
+	time, move := timedAIMoveSuggest(&gs.goban, 1)
+
+	c.JSON(http.StatusOK, gin.H{
+		"time": time,
+		"move":  move,
+	})
+}
+
+// On passe bien un pointeur (*GameServer) ici
+func setRouter(router *gin.Engine, gs *GameServer) {
+	router.GET("/ping", gs.handlePing)
+	router.GET("/board", gs.handleGetBoard)
+	router.GET("/ai-suggest", gs.handleAISuggest)
+	router.POST("/move", gs.handleMove)
+	// router.POST("/debug", gs.handleDebug)
+	// Tu peux ajouter gs.handleDebug ici de la même façon
 }
 
 func setGoban(goban *s_table, newGoban [][]int) {
@@ -135,7 +117,7 @@ func convertGobanTo2D(goban *[gobanSize]uint8) [][]int {
 	return board2D
 }
 
-func timedAIMove(goban *s_table, color uint8) bool{
+func timedAIMove(goban *s_table, color uint8) int64 {
 
 	start := time.Now()
 	move := getAIMove(*goban, color)
@@ -143,8 +125,108 @@ func timedAIMove(goban *s_table, color uint8) bool{
 	valideMove := playTurn(goban, move.x, move.y, color)
 
 	fmt.Printf("AI move computed in %s\n", elapsed)
-	if valideMove == 1 {
-		return true
-	}
-	return false
+	return elapsed.Milliseconds()
 }
+
+func timedAIMoveSuggest(goban *s_table, color uint8) (int64, s_StonesPos) {
+
+	start := time.Now()
+	move := IAMainNoThread(*goban, color)
+	elapsed := time.Since(start)
+
+	fmt.Printf("AI suggestion computed in %s\n", elapsed)
+	return	elapsed.Milliseconds(), move
+}
+
+
+
+
+
+// package main
+
+// import (
+// 	"fmt"
+// 	"log"
+// 	"net/http"
+// 	"time"
+
+// 	"github.com/gin-gonic/gin"
+// )
+
+
+// func setRouter(router *gin.Engine, serv GameServer) {
+
+// 	router.GET("/ping", func(c *gin.Context) {
+// 		c.JSON(http.StatusOK, gin.H{"message": "pong"})
+// 	})
+
+
+// 	router.GET("/board", func(c *gin.Context) {
+// 		c.JSON(http.StatusOK, gin.H{
+// 			"board": convertGobanTo2D(serv.goban.cells),
+// 		})
+// 	})
+
+
+// 	router.POST("/move", func(c *gin.Context) {
+// 		var req MoveRequest
+
+
+// 		if err := c.ShouldBindJSON(&req); err != nil {
+// 			c.JSON(http.StatusBadRequest, gin.H{"status": "Données invalides (besoin de x, y, color)"})
+// 			return
+// 		}
+
+
+// 		validMove := putStone(&goban, req.X, req.Y, uint8(req.Color))
+
+// 		if !validMove {
+// 			c.JSON(http.StatusBadRequest, gin.H{"status": "error coup invalide"})
+// 			return
+// 		}
+
+
+// 		fmt.Printf("Coup reçu : Joueur %d en (%d, %d)\n", req.Color, req.X, req.Y)
+
+
+// 		c.JSON(http.StatusOK, gin.H{
+// 			"status": "Coup accepté",
+// 			"board":   convertGobanTo2D(&goban.cells),
+// 		})
+
+// 		timedAIMove(&goban, 2)
+
+// 	})
+
+// 	router.POST("/debug", func(c *gin.Context) {
+// 		var req DebugRequest
+
+
+// 		if err := c.ShouldBindJSON(&req); err != nil {
+// 			c.JSON(http.StatusBadRequest, gin.H{"error": "Donnée invalide (besoin de splited_goban)"})
+// 			return
+// 		}
+
+// 		newGoban := req.SplitedGoban
+
+// 		fmt.Println("Nouveau goban reçu :")
+// 		for i := 0; i < gobanWidth; i++ {
+// 			for j := 0; j < gobanWidth; j++ {
+// 				fmt.Printf("%d ", newGoban[i][j])
+// 			}
+// 			fmt.Println()
+// 		}
+
+// 		setGoban(&goban, newGoban)
+
+// 		c.JSON(http.StatusOK, gin.H{
+// 			"message": "Goban mis à jour",
+// 			"board":   convertGobanTo2D(&goban.cells),
+// 		})
+// 	})
+
+
+// 	if err := router.Run(); err != nil {
+// 		log.Fatalf("failed to run server: %v", err)
+// 	}
+// }
