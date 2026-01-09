@@ -58,6 +58,11 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Coup illégal"})
 		return
 	} else if turn == 1 {
+		gs.goban = s_table{
+			size: gobanWidth,
+			captured_b: 0,
+			captured_w: 0,
+		}
 		c.JSON(http.StatusOK, gin.H{
 			"status": "Victoire",
 			"board":  convertGobanTo2D(&gs.goban.cells),
@@ -75,7 +80,19 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 	if gs.AIMode {
 		aiColor := uint8(2)
 		if req.Color == 2 { aiColor = 1 }
-		timedAIMove(&gs.goban, aiColor)
+		_, turn = timedAIMove(&gs.goban, aiColor)
+		if turn == 1 {
+			gs.goban = s_table{
+				size: gobanWidth,
+				captured_b: 0,
+				captured_w: 0,
+			}
+			c.JSON(http.StatusOK, gin.H{
+				"status": "Defaite",
+				"board":  convertGobanTo2D(&gs.goban.cells),
+			})
+			return
+		}
 	}
 }
 
@@ -153,15 +170,15 @@ func convertGobanTo2D(goban *[gobanSize]uint8) [][]int {
 	return board2D
 }
 
-func timedAIMove(goban *s_table, color uint8) int64 {
+func timedAIMove(goban *s_table, color uint8) (int64, int) {
 
 	start := time.Now()
 	move := getAIMove(*goban, color)
 	elapsed := time.Since(start)
-	playTurn(goban, move.x, move.y, color)
+	turn := playTurn(goban, move.x, move.y, color)
 
 	fmt.Printf("AI move computed in %d μs\n", elapsed.Microseconds())
-	return elapsed.Microseconds()
+	return elapsed.Microseconds(), turn
 }
 
 func timedAIMoveSuggest(goban *s_table, color uint8) (int64, s_StonesPos) {
