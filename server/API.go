@@ -53,8 +53,15 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
 
-	if !putStone(&gs.goban, req.X, req.Y, uint8(req.Color)) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "coup invalide"})
+	turn := playTurn(&gs.goban, req.X, req.Y, uint8(req.Color))
+	if turn == -1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Coup illégal"})
+		return
+	} else if turn == 1 {
+		c.JSON(http.StatusOK, gin.H{
+			"status": "Victoire",
+			"board":  convertGobanTo2D(&gs.goban.cells),
+		})
 		return
 	}
 	
