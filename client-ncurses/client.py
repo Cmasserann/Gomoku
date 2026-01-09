@@ -2,6 +2,13 @@ import curses
 
 import client_tool
 
+turn_to_play = True
+space_pressed = False
+x_input = -1
+y_input = -1
+sug_x = -1
+sug_y = -1
+
 def draw_menu(stdscr: curses.window):
     key = 0
     selection = 0
@@ -14,8 +21,9 @@ def draw_menu(stdscr: curses.window):
 
     curses.start_color()
     curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED)
     curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_WHITE)
+    curses.init_pair(4, curses.COLOR_RED, curses.COLOR_WHITE)
 
     title = "Welcome to the Go Game!"
     quit_msg = "Quit. [q]"
@@ -70,16 +78,16 @@ def draw_menu(stdscr: curses.window):
             draw_game(stdscr)
 
 def draw_game(stdscr: curses.window):
+    global turn_to_play
+    global space_pressed
+    global x_input
+    global y_input
+    global sug_x
+    global sug_y
+
     key = 0
-    turn_to_play = True
-    space_pressed = False
     cursor_x = 0
     cursor_y = 0
-    x_input = -1
-    y_input = -1
-    sug_x = -1
-    sug_y = -1
-    resp = 0
 
     board = client_tool.get_board()
     if not board:
@@ -94,7 +102,7 @@ def draw_game(stdscr: curses.window):
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        if height < len(board["board"]) + 7 or width < len(board["board"]) * 2:
+        if height < len(board["board"]) + 10     or width < len(board["board"]) * 2:
             stdscr.addstr(0, 0, "Terminal too small!", curses.color_pair(2))
             stdscr.refresh()
             key = stdscr.getch()
@@ -113,6 +121,11 @@ def draw_game(stdscr: curses.window):
                 char = "."
                 if (x, y) == (cursor_x, cursor_y):
                     stdscr.attron(curses.color_pair(3))
+                if (x, y) == (sug_x, sug_y):
+                    if (x, y) == (cursor_x, cursor_y):
+                        stdscr.attron(curses.color_pair(4))
+                    else:
+                        stdscr.attron(curses.color_pair(2))
                 if goban[y][x] == 1:
                     char = "B"
                 elif goban[y][x] == 2:
@@ -135,14 +148,10 @@ def draw_game(stdscr: curses.window):
 
         if key == curses.KEY_MOUSE :
             _, mx, my, _, _ = curses.getmouse()
-            stdscr.addstr(len(goban) + 2, 0, f"Mouse clicked at x={mx}, y={my}", curses.color_pair(1))
             grid_x = mx // 2
             grid_y = my
-            stdscr.addstr(len(goban) + 3, 0, f"Grid position x={grid_x}, y={grid_y}", curses.color_pair(1))
             if grid_x < len(goban) and grid_y < len(goban):
-                resp = client_tool.send_move(grid_x, grid_y, 1)
-                if resp:
-                    turn_to_play = False
+                send_move(grid_x, grid_y, 1)
 
         stdscr.addstr(len(goban) + 2, 0, f"Cursor at x={cursor_x}, y={cursor_y}", curses.color_pair(1))
 
@@ -172,14 +181,9 @@ def draw_game(stdscr: curses.window):
             space_pressed = True
         elif key == ord('\n') and turn_to_play :
             if space_pressed and y_input != -1 :
-                resp = client_tool.send_move(x_input, y_input, 1)
+                send_move(x_input, y_input, 1)
             elif cursor_x != -1 and cursor_y != -1 :
-                resp = client_tool.send_move(cursor_x, cursor_y, 1)
-            if resp :
-                turn_to_play = False
-            x_input = -1
-            y_input = -1
-            space_pressed = False
+                send_move(cursor_x, cursor_y, 1)
 
         if x_input != -1 :
             stdscr.addstr(len(goban) + 5, 0, f"X input: {x_input}", curses.color_pair(1))
@@ -209,6 +213,23 @@ def draw_game(stdscr: curses.window):
     stdscr.clear()
     stdscr.refresh()
 
+def send_move(x: int, y: int, color: int):
+    resp = client_tool.send_move(x, y, color)
+
+    global x_input 
+    global y_input
+    global sug_x
+    global sug_y
+    global space_pressed
+    global turn_to_play
+
+    x_input = -1
+    y_input = -1
+    sug_x = -1
+    sug_y = -1
+    if resp :
+        space_pressed = False
+        turn_to_play = False
 
 def main():
     curses.wrapper(draw_menu)
