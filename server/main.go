@@ -17,7 +17,7 @@ func main() {
             captured_b: 0,
             captured_w: 0,
         },
-		AIMode:			false,
+		AIMode:			true,
         isBusy:			false,
         gameStarted:	false,
     }

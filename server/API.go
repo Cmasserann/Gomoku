@@ -151,7 +151,7 @@ func timedAIMove(goban *s_table, color uint8) int64 {
 	start := time.Now()
 	move := getAIMove(*goban, color)
 	elapsed := time.Since(start)
-	valideMove := playTurn(goban, move.x, move.y, color)
+	playTurn(goban, move.x, move.y, color)
 
 	fmt.Printf("AI move computed in %d μs\n", elapsed.Microseconds())
 	return elapsed.Microseconds()
@@ -160,7 +160,7 @@ func timedAIMove(goban *s_table, color uint8) int64 {
 func timedAIMoveSuggest(goban *s_table, color uint8) (int64, s_StonesPos) {
 
 	start := time.Now()
-	move := IAMainNoThread(*goban, color)
+	move := getAIMove(*goban, color)
 	elapsed := time.Since(start)
 
 	fmt.Printf("AI suggestion computed in %d μs\n", elapsed.Microseconds())
