@@ -7,11 +7,22 @@ import (
 const gobanWidth = 19
 const gobanSize = gobanWidth * gobanWidth
 
-var goban = s_table{ size: gobanWidth, captured_b: 0, captured_w: 0 }
 
 func main() {
+    router := gin.Default()
 
-	router := gin.Default()
+    server := &GameServer{
+        goban: s_table{
+            size:       gobanWidth,
+            captured_b: 0,
+            captured_w: 0,
+        },
+		AIMode:			true,
+        isBusy:			false,
+        gameStarted:	false,
+    }
 
-	setRouter(router)
+    setRouter(router, server)
+
+    router.Run(":8080")
 }
