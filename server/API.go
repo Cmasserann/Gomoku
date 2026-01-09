@@ -17,6 +17,9 @@ type MoveRequest struct {
 
 type DebugRequest struct {
 	SplitedGoban [][]int `json:"board"`
+	CaptiredB   int     `json:"captured_b"`
+	CaptiredW   int     `json:"captured_w"`
+	ResetGoban  bool    `json:"reset_board"`
 }
 
 type GameServer struct {
@@ -47,11 +50,9 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 		return
 	}
 
-	// On verrouille pour éviter les conflits
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
 
-	// 1. Joueur humain
 	if !putStone(&gs.goban, req.X, req.Y, uint8(req.Color)) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "coup invalide"})
 		return
@@ -78,19 +79,47 @@ func (gs *GameServer) handleAISuggest(c *gin.Context) {
 	time, move := timedAIMoveSuggest(&gs.goban, 1)
 
 	c.JSON(http.StatusOK, gin.H{
-		"time": time,
-		"move":  move,
+		"time μs":	time,
+		"x":		move.x,
+		"y":		move.y,
 	})
 }
 
-// On passe bien un pointeur (*GameServer) ici
+func (gs *GameServer) handleDebug(c *gin.Context) {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+	
+	var req DebugRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Donnée invalide"})
+		return
+	}
+
+	if req.ResetGoban {
+		gs.goban = s_table{
+			size:       gobanWidth,
+			captured_b: req.CaptiredB,
+			captured_w: req.CaptiredW,
+		}
+	} else {
+		setGoban(&gs.goban, req.SplitedGoban)
+		gs.goban.captured_b = req.CaptiredB
+		gs.goban.captured_w = req.CaptiredW
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Goban mis à jour",
+		"board":   convertGobanTo2D(&gs.goban.cells),
+	})
+}
+
+
 func setRouter(router *gin.Engine, gs *GameServer) {
 	router.GET("/ping", gs.handlePing)
 	router.GET("/board", gs.handleGetBoard)
 	router.GET("/ai-suggest", gs.handleAISuggest)
 	router.POST("/move", gs.handleMove)
-	// router.POST("/debug", gs.handleDebug)
-	// Tu peux ajouter gs.handleDebug ici de la même façon
+	router.POST("/debug", gs.handleDebug)
 }
 
 func setGoban(goban *s_table, newGoban [][]int) {
@@ -124,8 +153,8 @@ func timedAIMove(goban *s_table, color uint8) int64 {
 	elapsed := time.Since(start)
 	valideMove := playTurn(goban, move.x, move.y, color)
 
-	fmt.Printf("AI move computed in %s\n", elapsed)
-	return elapsed.Milliseconds()
+	fmt.Printf("AI move computed in %d μs\n", elapsed.Microseconds())
+	return elapsed.Microseconds()
 }
 
 func timedAIMoveSuggest(goban *s_table, color uint8) (int64, s_StonesPos) {
@@ -134,8 +163,8 @@ func timedAIMoveSuggest(goban *s_table, color uint8) (int64, s_StonesPos) {
 	move := IAMainNoThread(*goban, color)
 	elapsed := time.Since(start)
 
-	fmt.Printf("AI suggestion computed in %s\n", elapsed)
-	return	elapsed.Milliseconds(), move
+	fmt.Printf("AI suggestion computed in %d μs\n", elapsed.Microseconds())
+	return	elapsed.Microseconds(), move
 }
 
 
