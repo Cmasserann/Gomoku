@@ -1,8 +1,8 @@
 package main
 
-import (
-	"fmt"
-)
+// import (
+// 	"fmt"
+// )
 
 type s_ScorePos struct {
 	pos   s_StonesPos
@@ -25,7 +25,7 @@ func getAIMove(table s_table, color uint8) s_StonesPos {
 
 	resultRecurse := RecursiveSearch(maxDepth, table, availableMovesTable, true, color)
 
-	fmt.Println("IA possible positions:", resultRecurse)
+	// fmt.Println("IA possible positions:", resultRecurse)
 	return resultRecurse.pos
 }
 
@@ -108,7 +108,7 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 			if result.score == highestScore {
 				return s_ScorePos{pos: result.pos, score: highestScore * pow10[depth / 2]}
 			}
-			fmt.Println("Result of move", sm, "at depth", depth, ":", result)
+			// fmt.Println("Result of move", sm, "at depth", depth, ":", result)
 			if (AIMove) {
 				result.score = result.score + bestMove.score * pow10[depth]
 			} else {
@@ -118,7 +118,7 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 			bestMoves = append(bestMoves, result)
 		}
 	}
-	fmt.Println("Best Moves at depth", depth, ":", bestMoves)
+	// fmt.Println("Best Moves at depth", depth, ":", bestMoves)
 
 	maxScore = 0
 	for _, bm := range bestMoves {
