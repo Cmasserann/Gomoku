@@ -77,6 +77,8 @@ def draw_game(stdscr: curses.window):
     cursor_y = 0
     x_input = -1
     y_input = -1
+    sug_x = -1
+    sug_y = -1
     resp = 0
 
     board = client_tool.get_board()
@@ -184,6 +186,20 @@ def draw_game(stdscr: curses.window):
         if y_input != -1 :
             stdscr.addstr(len(goban) + 6, 0, f"Y input: {y_input}", curses.color_pair(1))
 
+        if key == ord('c') :
+            x_input = -1
+            y_input = -1
+            space_pressed = False
+
+        if key == ord('h') :
+            ret = client_tool.ai_suggest()
+            if ret :
+                sug_x = ret.get("x", -1)
+                sug_y = ret.get("y", -1)
+        if sug_x != -1 and sug_y != -1 :
+            stdscr.addstr(len(goban) + 7, 0, f"AI suggests move at x={sug_x}, y={sug_y}", curses.color_pair(1))
+
+
         stdscr.refresh()
 
         stdscr.timeout(200)
@@ -192,6 +208,7 @@ def draw_game(stdscr: curses.window):
     stdscr.timeout(-1)
     stdscr.clear()
     stdscr.refresh()
+
 
 def main():
     curses.wrapper(draw_menu)

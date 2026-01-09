@@ -25,8 +25,7 @@ def send_move(x: int, y: int, color: int) -> (dict[str, Any] | None):
     except Exception as e:
         print(f"Error : {e}")
         return None
-
-
+    
 def wait_for_change(old_board: dict[str, Any]):
     print("AI search the best way to kick your ass...")
     while True:
@@ -34,3 +33,14 @@ def wait_for_change(old_board: dict[str, Any]):
         if new_board['board'] != old_board['board']:
             return new_board
         time.sleep(0.2)
+
+def ai_suggest() -> (dict[str, int] | None):
+    try:
+        response = requests.get(f"{URL_BASE}/ai-suggest")
+        if response.status_code != 200:
+            print(f"AI suggestion error: {response.json().get('status', 'Unknown error')}")
+            return None
+        return response.json()
+    except Exception as e:
+        print(f"Error : {e}")
+        return None
