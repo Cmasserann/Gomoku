@@ -25,26 +25,37 @@ func checkOneDirection(table *s_table, x int, y int, color uint8, dx int, dy int
 	size := table.size
 	count := 0
 	end := 0
+	space := 0
 
 	for n := -1 ; n <= 1; n += 2 {
 		for i := 1; i <= 4; i++ {
 			nx := x + i * dx * n
 			ny := y + i * dy * n
-			if !inbounds(size, nx, ny) || table.cells[ny * size + nx] != color {
-				if end != 0 {
+			if !inbounds(size, nx, ny) || table.cells[ny * size + nx] == opponentColor(color) {
+				end++
+				break
+			} else if i == 4{
+				if table.cells[ny * size + nx] != 0 {
 					end++
 				}
-				break
-			} else {
+			} else if table.cells[ny * size + nx] == color {
 				count++
+			} else if table.cells[ny * size + nx] == 0 {
+				space++
+			}
+			if space > 1 {
+				break
 			}
 		}
 	}
-	if count == 3 && end == 2 {
-		return 5000
+	if end == 2 {
+		return 0
 	}
-	if count == 4 {
-		return 100000
+	if count >= 3 {
+		return highestScore
+	}
+	if count - end < 0 {
+		return 0
 	}
 	return pow10[count - end]
 }

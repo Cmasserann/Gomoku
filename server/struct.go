@@ -243,19 +243,31 @@ func freeThrees(table s_table, x int, y int, color uint8) int {
 func directionalFreeThree(table s_table, x int, y int, color uint8, dx int, dy int) bool {
 	size := table.size
 	count := 0
-
+	end := 0
+	
 	for n := -1 ; n <= 1; n += 2 {
+		space := 0
 		for i := 1; i <= 4; i++ {
 			nx := x + i * dx * n
 			ny := y + i * dy * n
 			if !inbounds(size, nx, ny) || table.cells[ny * size + nx] == opponentColor(color) {
+				end++
 				break
+			} else if i == 4 {
+				if table.cells[ny * size + nx] != 0 {
+					end++
+				}
 			} else if table.cells[ny * size + nx] == color{
 				count++
+			} else if table.cells[ny * size + nx] == 0 {
+				space++
+			}
+			if space > 1 {
+				break
 			}
 		}
 	}
-	if count >= 2 {
+	if count == 2 && end == 0 {	
 		return true
 	}
 	return false
