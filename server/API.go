@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"crypto/rand"
+    "encoding/hex"
 	
 	"github.com/gin-gonic/gin"
 )
@@ -12,7 +14,7 @@ import (
 type MoveRequest struct {
 	X     int `json:"x"`
 	Y     int `json:"y"`
-	Color int `json:"color"` // 1 = Noir, 2 = Blanc
+	Token string `json:"token"`
 }
 
 type DebugRequest struct {
@@ -22,16 +24,45 @@ type DebugRequest struct {
 	ResetGoban  bool    `json:"reset_board"`
 }
 
+type SetGameRequest struct {
+	AIMode		bool	`json:"ai_mode"`
+	localMode	bool	`json:"local_mode"`
+}
+
 type GameServer struct {
 	mu          sync.Mutex
 	goban       s_table
 	AIMode		bool
-	isBusy      bool
+	localMode	bool
 	gameStarted bool
+	isBusy      bool
+	turn		int
+	playerOne	string
+	playerTwo	string
 }
 
-func (gs *GameServer) handlePing(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "pong"})
+func generateConnectionToken() string {
+    b := make([]byte, 8)
+    rand.Read(b)
+	fmt.Printf("Generated token: %x\n", b)
+    return hex.EncodeToString(b)
+}
+
+func generateInvitationToken() string {
+    b := make([]byte, 2)
+    rand.Read(b)
+	fmt.Printf("Generated token: %x\n", b)
+    return hex.EncodeToString(b)
+}
+
+func (gs *GameServer) handleStatus(c *gin.Context) {
+	gs.mu.Lock()
+	if gs.gameStarted {
+		c.JSON(http.StatusOK, gin.H{"goban status": "Locked"})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"goban status": "Free"})
+	}
+	gs.mu.Unlock()
 }
 
 func (gs *GameServer) handleGetBoard(c *gin.Context) {
@@ -44,33 +75,47 @@ func (gs *GameServer) handleGetBoard(c *gin.Context) {
 }
 
 func (gs *GameServer) handleMove(c *gin.Context) {
+
 	var req MoveRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Données invalides"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
+		return
+	}
+
+	if gs.gameStarted == false {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No game in progress"})
+		return
+	}
+	player := gs.checktoken(c, req.Token)
+	if player == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		fmt.Printf("Invalid token received: %s\n token needed: %s\n", req.Token ,gs.playerOne)
+		return
+	}
+	if gs.localMode == false && player == gs.turn % 2 + 1 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not your turn"})
 		return
 	}
 
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
 
-	turn := playTurn(&gs.goban, req.X, req.Y, uint8(req.Color))
-	if turn == -1 {
+	play := playTurn(&gs.goban, req.X, req.Y, uint8(player))
+	if play == -1 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Coup illégal"})
 		return
-	} else if turn == 1 {
-		gs.goban = s_table{
-			size: gobanWidth,
-			captured_b: 0,
-			captured_w: 0,
-		}
+	} else if play == 1 {
 		c.JSON(http.StatusOK, gin.H{
 			"status": "Victoire",
 			"board":  convertGobanTo2D(&gs.goban.cells),
 		})
+		gs.gameStarted = false
+		gs.turn = 1
 		return
 	}
 	
-	fmt.Printf("Coup reçu : Joueur %d en (%d, %d)\n", req.Color, req.X, req.Y)
+	fmt.Printf("Coup reçu : Joueur %d en (%d, %d)\n", player, req.X, req.Y)
+	gs.turn += 1
 	
 	c.JSON(http.StatusOK, gin.H{
 		"status": "Coup accepté et IA a répondu",
@@ -78,25 +123,47 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 	})
 	
 	if gs.AIMode {
-		aiColor := uint8(2)
-		if req.Color == 2 { aiColor = 1 }
-		_, turn = timedAIMove(&gs.goban, aiColor)
-		if turn == 1 {
-			gs.goban = s_table{
-				size: gobanWidth,
-				captured_b: 0,
-				captured_w: 0,
-			}
-			c.JSON(http.StatusOK, gin.H{
-				"status": "Defaite",
-				"board":  convertGobanTo2D(&gs.goban.cells),
-			})
-			return
-		}
+		timedAIMove(&gs.goban, 2)
+		gs.turn += 1
 	}
 }
 
+func (gs *GameServer) handleSetGame(c *gin.Context) {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+
+	if gs.gameStarted {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Une partie est déjà en cours"})
+		return
+	}
+
+	var req SetGameRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Donnée invalide"})
+		return
+	}
+
+	gs.AIMode = req.AIMode
+	gs.gameStarted = true
+	gs.playerOne = generateConnectionToken()
+	gs.playerTwo = generateInvitationToken()
+	gs.turn = 1
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":     "Nouvelle partie démarrée",
+		"ai_mode":     gs.AIMode,
+		"player_one":  gs.playerOne,
+		"player_two":  gs.playerTwo,
+	})
+}
+
 func (gs *GameServer) handleAISuggest(c *gin.Context) {
+
+	if gs.checktoken(c, c.Query("token")) == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Token invalide"})
+		return
+	}
+
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
 
@@ -137,11 +204,25 @@ func (gs *GameServer) handleDebug(c *gin.Context) {
 	})
 }
 
+func (gs *GameServer) checktoken(c *gin.Context, token string, ) int {
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+	
+	if token == gs.playerOne {
+		return 1
+	} else if token == gs.playerTwo{
+		return 2
+	} else {
+		return 0
+	}
+}
+
 
 func setRouter(router *gin.Engine, gs *GameServer) {
-	router.GET("/ping", gs.handlePing)
+	router.GET("/status", gs.handleStatus)
 	router.GET("/board", gs.handleGetBoard)
 	router.GET("/ai-suggest", gs.handleAISuggest)
+	router.POST("/create", gs.handleSetGame)
 	router.POST("/move", gs.handleMove)
 	router.POST("/debug", gs.handleDebug)
 }

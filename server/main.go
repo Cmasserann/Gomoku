@@ -17,9 +17,11 @@ func main() {
             captured_b: 0,
             captured_w: 0,
         },
-		AIMode:			true,
-        isBusy:			false,
+		AIMode:			false,
+        localMode:	    false,
         gameStarted:	false,
+        turn:			1,
+        isBusy:			false,
     }
 
     setRouter(router, server)
