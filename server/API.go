@@ -161,16 +161,42 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 	
 	fmt.Printf("Coup reçu : Joueur %d en (%d, %d)\n", player, req.X, req.Y)
 	gs.turn += 1
-	
-	c.JSON(http.StatusOK, gin.H{
-		"status": "Coup accepté et IA a répondu",
-		"board":  convertGobanTo2D(&gs.goban.cells),
-	})
-	
+
 	if gs.AIMode {
-		timedAIMove(&gs.goban, 2)
+		time, turn := timedAIMove(&gs.goban, 2)
+		
+		if turn == 1 {
+			c.JSON(http.StatusOK, gin.H{
+				"status": "Victoire de l'IA",
+				"board":  convertGobanTo2D(&gs.goban.cells),
+				"time μs": time,
+			})
+			gs.goban = s_table{
+				size:       gobanWidth,
+				captured_b: 0,
+				captured_w: 0,
+			}
+			gs.turn = 1
+			gs.gameStarted = false
+			gs.playerOne = ""
+			gs.playerTwo = ""
+			return
+		}
+
 		gs.turn += 1
+		c.JSON(http.StatusOK, gin.H{
+			"board":  convertGobanTo2D(&gs.goban.cells),
+			"turn":	gs.turn,
+			"time μs": time,
+		})
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"board":  convertGobanTo2D(&gs.goban.cells),
+			"turn":	gs.turn,
+		})
 	}
+	
+	
 }
 
 
@@ -190,14 +216,17 @@ func (gs *GameServer) handleSetGame(c *gin.Context) {
 	}
 
 	gs.AIMode = req.AIMode
-	gs.localMode = req.LocalMode
+	if gs.AIMode == true {
+		gs.localMode = false
+	} else {
+		gs.localMode = req.LocalMode
+	}
 	gs.gameStarted = true
 	gs.playerOne = generateConnectionToken()
 	gs.playerTwo = generateInvitationToken()
 	gs.turn = 1
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":     "Nouvelle partie démarrée",
 		"ai_mode":     gs.AIMode,
 		"player_one":  gs.playerOne,
 		"player_two":  gs.playerTwo,
