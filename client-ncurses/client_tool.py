@@ -58,3 +58,69 @@ def get_cursor_pos(
     elif key == curses.KEY_RIGHT:
         cursor_x = min(goban_size - 1, cursor_x + 1)
     return cursor_x, cursor_y
+
+
+def draw_info_panel(
+    stdscr: curses.window,
+    start_line: int,
+    start_x: int,
+    turn_to_play: bool,
+    big_goban: bool,
+    captures_B: int = 0,
+    captures_W: int = 0,
+):
+    if turn_to_play:
+        msg = " Your turn to play. "
+    else:
+        msg = " Waiting for opponent... "
+    capt_msg_1 = " B Capture: " + str(captures_B) + " "
+    capt_msg_2 = " W Capture: " + str(captures_W) + " "
+
+    if big_goban:
+        start_line += 2
+        stdscr.addstr(start_line, start_x, "║")
+        stdscr.addstr(start_line + 1, start_x, "╚")
+
+        stdscr.addstr(start_line, start_x + 1, msg)
+        stdscr.addstr(
+            start_line + 1,
+            start_x + 1,
+            "═" * (len(msg) + len(capt_msg_1) + len(capt_msg_2) + 2),
+        )
+
+        stdscr.addstr(start_line, start_x + len(msg) + 1, "║")
+        stdscr.addstr(start_line - 1, start_x + len(msg) + 1, "╦")
+        stdscr.addstr(start_line + 1, start_x + len(msg) + 1, "╩")
+
+        stdscr.attron(curses.color_pair(1))
+        stdscr.addstr(start_line, start_x + len(msg) + 2, capt_msg_1)
+        stdscr.attron(curses.color_pair(5))
+        stdscr.addstr(start_line, start_x + len(msg) + len(capt_msg_1) + 3, capt_msg_2)
+        stdscr.attroff(curses.color_pair(5))
+
+        stdscr.addstr(start_line - 1, start_x + len(msg) + len(capt_msg_1) + 2, "╦")
+        stdscr.addstr(start_line, start_x + len(msg) + len(capt_msg_1) + 2, "║")
+        stdscr.addstr(start_line + 1, start_x + len(msg) + len(capt_msg_1) + 2, "╩")
+        stdscr.addstr(
+            start_line - 1,
+            start_x + len(msg) + len(capt_msg_1) + len(capt_msg_2) + 3,
+            "╦",
+        )
+        stdscr.addstr(
+            start_line, start_x + len(msg) + len(capt_msg_1) + len(capt_msg_2) + 3, "║"
+        )
+        stdscr.addstr(
+            start_line + 1,
+            start_x + len(msg) + len(capt_msg_1) + len(capt_msg_2) + 3,
+            "╝",
+        )
+    else:
+        stdscr.addstr(start_line, start_x, msg)
+
+        stdscr.attron(curses.color_pair(1))
+        stdscr.addstr(start_line + 2, start_x, capt_msg_1)
+        stdscr.attroff(curses.color_pair(1))
+
+        stdscr.attron(curses.color_pair(5))
+        stdscr.addstr(start_line + 3, start_x, capt_msg_2)
+        stdscr.attroff(curses.color_pair(5))
