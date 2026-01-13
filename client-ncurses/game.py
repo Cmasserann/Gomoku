@@ -1,6 +1,6 @@
 import curses
 
-import client_tool
+import game_tool as tool
 import menu
 
 turn_to_play = True
@@ -9,22 +9,55 @@ x_input = -1
 y_input = -1
 sug_x = -1
 sug_y = -1
+token = ""
 
 
-def draw_game(stdscr: curses.window):
+def draw_game(
+    stdscr: curses.window,
+    ai_mode: bool = False,
+    local_mode: bool = False,
+    invite_token: str = "",
+):
     global turn_to_play
     global space_pressed
     global x_input
     global y_input
     global sug_x
     global sug_y
+    global token
 
     key = 0
     cursor_x = 0
     cursor_y = 0
     big_goban = True
+    token2 = ""
 
-    board = client_tool.get_board()
+    if invite_token:
+        room = tool.join_room(invite_token)
+        if not room:
+            stdscr.clear()
+            stdscr.addstr(0, 0, "Failed to join the room. Press any key to exit.")
+            stdscr.getch()
+            stdscr.clear()
+            stdscr.refresh()
+            return
+        else:
+            token = room["token"]
+
+    elif not token:
+        room = tool.create_room(ai_mode, local_mode)
+        if not room:
+            stdscr.clear()
+            stdscr.addstr(0, 0, "Failed to create a room. Press any key to exit.")
+            stdscr.getch()
+            stdscr.clear()
+            stdscr.refresh()
+            return
+        else:
+            token = room["player_one"]
+            token2 = room["player_two"]
+
+    board = tool.get_board()
     if not board:
         stdscr.clear()
         stdscr.addstr(0, 0, "Failed to connect to server. Press any key to exit.")
@@ -37,7 +70,7 @@ def draw_game(stdscr: curses.window):
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
-        if height < len(board["board"]) + 5 or width < len(board["board"]) * 2 - 1:
+        if height < len(board["board"]) + 7 or width < len(board["board"]) * 2 - 1:
             stdscr.addstr(0, 0, "Terminal too small!", curses.color_pair(2))
             stdscr.refresh()
             key = stdscr.getch()
@@ -45,14 +78,14 @@ def draw_game(stdscr: curses.window):
 
         if (
             width >= len(board["board"]) * 4 + 2
-            and height >= len(board["board"]) * 2 + 5
+            and height >= len(board["board"]) * 2 + 7
         ):
             big_goban = True
         else:
             big_goban = False
 
         if not turn_to_play:
-            new_board = client_tool.wait_for_change(board)
+            new_board = tool.wait_for_change(board)
             if new_board["board"] != board["board"]:
                 board = new_board
                 turn_to_play = True
@@ -70,9 +103,7 @@ def draw_game(stdscr: curses.window):
         stdscr.addstr(height - 1, 0, "Press 'q' to exit.")
         stdscr.attroff(curses.color_pair(3))
 
-        cursor_x, cursor_y = client_tool.get_cursor_pos(
-            key, cursor_x, cursor_y, len(goban)
-        )
+        cursor_x, cursor_y = tool.get_cursor_pos(key, cursor_x, cursor_y, len(goban))
 
         if key == curses.KEY_MOUSE:
             _, mx, my, _, _ = curses.getmouse()
@@ -88,8 +119,9 @@ def draw_game(stdscr: curses.window):
                 send_move(grid_x, grid_y, 1)
 
         start_line = len(goban) * 2 if big_goban else len(goban)
-        client_tool.draw_info_panel(
-            stdscr, start_line, start_x, turn_to_play, big_goban
+        token2 = token2 if not local_mode and not ai_mode else ""
+        tool.draw_info_panel(
+            stdscr, start_line, start_x, turn_to_play, big_goban, invite_token=token2
         )
 
         if key in range(ord("0"), ord("9") + 1):
@@ -127,7 +159,7 @@ def draw_game(stdscr: curses.window):
             space_pressed = False
 
         if key == ord("h"):
-            ret = client_tool.ai_suggest()
+            ret = tool.ai_suggest(token)
             if ret:
                 sug_x = ret.get("x", -1)
                 sug_y = ret.get("y", -1)
@@ -138,6 +170,8 @@ def draw_game(stdscr: curses.window):
                 f"AI suggests move at x={sug_x}, y={sug_y}",
                 curses.color_pair(1),
             )
+        if key == ord("q"):
+            break
 
         stdscr.refresh()
 
@@ -157,7 +191,6 @@ def draw_goban(
     cursor_y: int,
     start_x: int,
 ):
-
     for y in range(len(goban)):
         for x in range(len(goban[y])):
             char = "."
@@ -235,7 +268,9 @@ def select_color(x: int, y: int, cursor_x: int, cursor_y: int, value: int) -> in
 
 
 def send_move(x: int, y: int, color: int):
-    resp = client_tool.send_move(x, y, color)
+    global token
+
+    resp = tool.send_move(x, y, color, token)
 
     global x_input
     global y_input
