@@ -21,7 +21,6 @@ func main() {
         localMode:	    false,
         gameStarted:	false,
         turn:			1,
-        isBusy:			false,
     }
 
     setRouter(router, server)
