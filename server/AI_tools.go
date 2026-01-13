@@ -26,15 +26,18 @@ func checkOneDirection(table *s_table, x int, y int, color uint8, dx int, dy int
 	count := 0
 	end := 0
 	space := 0
-
+	
 	for n := -1 ; n <= 1; n += 2 {
-		for i := 1; i <= 4; i++ {
+		for i := 1; i <= 5; i++ {
 			nx := x + i * dx * n
 			ny := y + i * dy * n
-			if !inbounds(size, nx, ny) || table.cells[ny * size + nx] == opponentColor(color) {
+			if !inbounds(size, nx, ny) {
 				end++
 				break
-			} else if i == 4{
+			} else if table.cells[ny * size + nx] == opponentColor(color) {
+				end++
+				break
+			} else if i == 5 {
 				if table.cells[ny * size + nx] != 0 {
 					end++
 				}
@@ -48,13 +51,9 @@ func checkOneDirection(table *s_table, x int, y int, color uint8, dx int, dy int
 			}
 		}
 	}
-	if end == 2 {
-		return 0
-	}
-	if count >= 3 {
+	if count >= 4 {
 		return highestScore
-	}
-	if count - end < 0 {
+	} else if count - end < 0 {
 		return 0
 	}
 	return pow10[count - end]
