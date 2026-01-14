@@ -27,7 +27,7 @@ type GameServer struct {
 func setRouter(router *gin.Engine, gs *GameServer) {
 	router.GET("/status", gs.handleStatus)
 	router.GET("/board", gs.handleGetBoard)
-	router.GET("/ai-suggest", gs.handleAISuggest)
+	router.POST("/ai-suggest", gs.handleAISuggest)
 	router.POST("/create", gs.handleSetGame)
 	router.POST("/join", gs.handleInvitation)
 	router.POST("/move", gs.handleMove)
@@ -66,11 +66,7 @@ func (gs *GameServer) handleInvitation(c *gin.Context) {
 func (gs *GameServer) handleStatus(c *gin.Context) {
 
 	gs.mu.Lock()
-	if gs.gameStarted {
-		c.JSON(http.StatusOK, gin.H{"goban status": "Locked"})
-	} else {
-		c.JSON(http.StatusOK, gin.H{"goban status": "Free"})
-	}
+	c.JSON(http.StatusOK, gin.H{"goban_free": !gs.gameStarted})
 	gs.mu.Unlock()
 }
 	
@@ -160,7 +156,7 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"board":  convertGobanTo2D(&gs.goban.cells),
 			"turn":	gs.turn,
-			"time μs": time,
+			"time": time,
 		})
 	} else {
 		c.JSON(http.StatusOK, gin.H{
@@ -179,7 +175,7 @@ func (gs *GameServer) handleSetGame(c *gin.Context) {
 	defer gs.mu.Unlock()
 
 	if gs.gameStarted {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Une partie est déjà en cours"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Game already in progress"})
 		return
 	}
 
@@ -189,7 +185,7 @@ func (gs *GameServer) handleSetGame(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Donnée invalide"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
 		return
 	}
 
@@ -242,7 +238,7 @@ func (gs *GameServer) handleAISuggest(c *gin.Context) {
 	time, move := timedAIMoveSuggest(&gs.goban, 1)
 
 	c.JSON(http.StatusOK, gin.H{
-		"time μs":	time,
+		"time":	time,
 		"x":		move.x,
 		"y":		move.y,
 	})
@@ -259,7 +255,7 @@ func (gs *GameServer) handleDebug(c *gin.Context) {
 	}
 	
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Donnée invalide"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
 		return
 	}
 	
