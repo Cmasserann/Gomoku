@@ -144,7 +144,7 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
 				"winner": 2,
 				"board":  convertGobanTo2D(&gs.goban.cells),
-				"time μs": time,
+				"time_us": time,
 			})
 			gs.gameStarted = false
 			gs.playerOne = ""
@@ -238,7 +238,7 @@ func (gs *GameServer) handleAISuggest(c *gin.Context) {
 	time, move := timedAIMoveSuggest(&gs.goban, 1)
 
 	c.JSON(http.StatusOK, gin.H{
-		"time":	time,
+		"time_us":	time,
 		"x":		move.x,
 		"y":		move.y,
 	})
@@ -328,10 +328,9 @@ func (gs *GameServer) handleGiveUp(c *gin.Context) {
 	}
 
 	gs.gameStarted = false
-	gs.turn = 1
 	
 	c.JSON(http.StatusOK, gin.H{
-		"message": fmt.Sprintf("Player %d has given up. Game over.", player),
+		"message": "Game over.",
 	})
 }
 
