@@ -49,7 +49,7 @@ def draw_game(
         stdscr.clear()
         stdscr.refresh()
         return
-    
+
     if token2 == "":
         player_2 = True
 
@@ -141,7 +141,16 @@ def draw_game(
         start_line = len(goban) * 2 if big_goban else len(goban)
         token2 = token2 if not local_mode and not ai_mode else ""
         draw_info_panel(
-            stdscr, start_line, start_x, turn_to_play, big_goban, invite_token=token2, local_mode=local_mode, turn=turn
+            stdscr,
+            start_line,
+            start_x,
+            turn_to_play,
+            big_goban,
+            captures_B=board.get("captured_b", 0),
+            captures_W=board.get("captured_w", 0),  
+            invite_token=token2,
+            local_mode=local_mode,
+            turn=turn,
         )
 
         if key in range(ord("0"), ord("9") + 1):
@@ -341,10 +350,15 @@ def draw_info_panel(
     else:
         msg = " Waiting for opponent... "
     if local_mode:
-        msg = " Player 1's turn to play. " if turn % 2 == 1 else " Player 2's turn to play. "
-    capt_msg_1 = " B Capture: " + str(captures_B) + " "
-    capt_msg_2 = " W Capture: " + str(captures_W) + " "
+        msg = (
+            " Player 1's turn to play. "
+            if turn % 2 == 1
+            else " Player 2's turn to play. "
+        )
+    capt_msg_1 = f" B Capture: {str(captures_B)} "
+    capt_msg_2 = f" W Capture: {str(captures_W)} "
     turn_msg = f" Turn: {turn} "
+    invite_msg = f" Code: {invite_token} "
 
     if big_goban:
         start_line += 2
@@ -355,7 +369,7 @@ def draw_info_panel(
         stdscr.addstr(
             start_line + 1,
             start_x + 1,
-            "═" * (len(msg) + len(capt_msg_1) + len(capt_msg_2) + len(turn_msg) + 3),
+            "═" * (len(msg) + len(capt_msg_1) + len(capt_msg_2) + len(turn_msg) + (len(invite_msg) + 1 if invite_token else 0) + 3),
         )
 
         start_x += len(msg) + 1
@@ -363,51 +377,39 @@ def draw_info_panel(
         stdscr.addstr(start_line - 1, start_x, "╦")
         stdscr.addstr(start_line + 1, start_x, "╩")
 
-        stdscr.attron(curses.color_pair(1))
-        stdscr.addstr(start_line, start_x + 1, capt_msg_1)
-        stdscr.attron(curses.color_pair(5))
+        stdscr.addstr(start_line, start_x + 1, capt_msg_1, curses.color_pair(1))
+
 
         start_x += len(capt_msg_1) + 1
-        stdscr.addstr(start_line, start_x + 1, capt_msg_2)
-        stdscr.attroff(curses.color_pair(5))
-
         stdscr.addstr(start_line - 1, start_x, "╦")
         stdscr.addstr(start_line, start_x, "║")
         stdscr.addstr(start_line + 1, start_x, "╩")
 
+        stdscr.addstr(start_line, start_x + 1, capt_msg_2, curses.color_pair(5))
+
         start_x += len(capt_msg_2) + 1
-        stdscr.addstr(
-            start_line - 1,
-            start_x,
-            "╦",
-        )
-        stdscr.addstr(
-            start_line, start_x, "║"
-        )
-        stdscr.addstr(
-            start_line + 1,
-            start_x,
-            "╩",
-        )
+        stdscr.addstr(start_line - 1, start_x, "╦")
+        stdscr.addstr(start_line, start_x, "║")
+        stdscr.addstr(start_line + 1, start_x, "╩")
+
 
         stdscr.addstr(start_line, start_x + 1, turn_msg)
 
         start_x += len(turn_msg) + 1
-        stdscr.addstr(
-            start_line - 1,
-            start_x,
-            "╦",
-        )
-        stdscr.addstr(
-            start_line, start_x, "║"
-        )
-        stdscr.addstr(
-            start_line + 1,
-            start_x,
-            "╝",
-        )
+        stdscr.addstr(start_line - 1, start_x, "╦")
+        stdscr.addstr(start_line, start_x, "║")
+        stdscr.addstr(start_line + 1, start_x, "╝")
 
-        
+        if invite_token:
+            stdscr.addstr(start_line + 1, start_x, "╩")
+            stdscr.addstr(start_line, start_x + 1, invite_msg)
+
+            start_x += len(invite_msg) + 1
+            stdscr.addstr(start_line - 1, start_x, "╦")
+            stdscr.addstr(start_line, start_x, "║")
+            stdscr.addstr(start_line + 1, start_x, "╝")
+
+
     else:
         stdscr.addstr(start_line, start_x, msg)
 
@@ -425,6 +427,7 @@ def draw_info_panel(
             stdscr.addstr(
                 start_line + 5, start_x, " Invitation Token: " + invite_token + " "
             )
+
 
 def draw_endGame(stdscr: curses.window, winner: int):
     stdscr.clear()
