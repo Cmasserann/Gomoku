@@ -49,7 +49,7 @@ def draw_game(
         stdscr.clear()
         stdscr.refresh()
         return
-    
+
     if ai_mode is True:
         player_2 = False
         local_mode = False
@@ -150,7 +150,7 @@ def draw_game(
             turn_to_play,
             big_goban,
             captures_B=board.get("captured_b", 0),
-            captures_W=board.get("captured_w", 0),  
+            captures_W=board.get("captured_w", 0),
             invite_token=token2,
             local_mode=local_mode,
             turn=turn,
@@ -364,14 +364,24 @@ def draw_info_panel(
     invite_msg = f" {invite_token} "
 
     if big_goban:
+
+        def draw_border(
+            stdscr: curses.window, start_line: int, start_x: int, last_char: str = "╩"
+        ):
+            stdscr.addstr(start_line - 1, start_x, "╦")
+            stdscr.addstr(start_line, start_x, "║")
+            stdscr.addstr(start_line + 1, start_x, last_char)
+
         start_line += 2
         stdscr.addstr(start_line, start_x, "║")
         stdscr.addstr(start_line + 1, start_x, "╚")
 
         stdscr.addstr(start_line, start_x + 1, msg)
+
         line_length = len(msg) + len(capt_msg_1) + len(capt_msg_2) + len(turn_msg) + 3
         if invite_token:
             line_length += len(invite_msg) + 1
+
         stdscr.addstr(
             start_line + 1,
             start_x + 1,
@@ -379,42 +389,26 @@ def draw_info_panel(
         )
 
         start_x += len(msg) + 1
-        stdscr.addstr(start_line, start_x, "║")
-        stdscr.addstr(start_line - 1, start_x, "╦")
-        stdscr.addstr(start_line + 1, start_x, "╩")
-
+        draw_border(stdscr, start_line, start_x)
         stdscr.addstr(start_line, start_x + 1, capt_msg_1, curses.color_pair(1))
 
-
         start_x += len(capt_msg_1) + 1
-        stdscr.addstr(start_line - 1, start_x, "╦")
-        stdscr.addstr(start_line, start_x, "║")
-        stdscr.addstr(start_line + 1, start_x, "╩")
-
+        draw_border(stdscr, start_line, start_x)
         stdscr.addstr(start_line, start_x + 1, capt_msg_2, curses.color_pair(5))
 
         start_x += len(capt_msg_2) + 1
-        stdscr.addstr(start_line - 1, start_x, "╦")
-        stdscr.addstr(start_line, start_x, "║")
-        stdscr.addstr(start_line + 1, start_x, "╩")
-
-
+        draw_border(stdscr, start_line, start_x)
         stdscr.addstr(start_line, start_x + 1, turn_msg)
 
         start_x += len(turn_msg) + 1
-        stdscr.addstr(start_line - 1, start_x, "╦")
-        stdscr.addstr(start_line, start_x, "║")
-        stdscr.addstr(start_line + 1, start_x, "╝")
+        draw_border(stdscr, start_line, start_x, "╝")
 
-        if invite_token :
+        if invite_token:
             stdscr.addstr(start_line + 1, start_x, "╩")
             stdscr.addstr(start_line, start_x + 1, invite_msg)
 
             start_x += len(invite_msg) + 1
-            stdscr.addstr(start_line - 1, start_x, "╦")
-            stdscr.addstr(start_line, start_x, "║")
-            stdscr.addstr(start_line + 1, start_x, "╝")
-
+            draw_border(stdscr, start_line, start_x, "╝")
 
     else:
         stdscr.addstr(start_line, start_x, msg)
