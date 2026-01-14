@@ -106,13 +106,13 @@ def handle_token(invite_token: str, ai_mode: bool, local_mode: bool) -> tuple[st
     if invite_token:
         room = join_room(invite_token)
         if not room:
-            return "", "" 
+            return "", "1"
         else:
             return room["token"], ""
 
     room = create_room(ai_mode, local_mode)
     if not room:
-        return "", ""
+        return "", "2"
     else:
         token = room["player_one"]
         token2 = room["player_two"]

@@ -38,8 +38,13 @@ def draw_game(
     token, token2 = tool.handle_token(invite_token, ai_mode, local_mode)
     board = tool.get_board()
     if not token or not board:
+        msg = "Failed to connect to server. Press any key to exit."
+        if token2 == "1":
+            msg = "Invalid invitation token. Press any key to exit."
+        elif token2 == "2":
+            msg = "Failed to create a room. Press any key to exit."
         stdscr.clear()
-        stdscr.addstr(0, 0, "Failed to connect to server. Press any key to exit.")
+        stdscr.addstr(0, 0, msg)
         stdscr.getch()
         stdscr.clear()
         stdscr.refresh()
