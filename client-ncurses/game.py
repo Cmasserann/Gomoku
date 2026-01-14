@@ -3,9 +3,6 @@ import curses
 import game_tool as tool
 
 turn_to_play = True
-space_pressed = False
-x_input = -1
-y_input = -1
 sug_x = -1
 sug_y = -1
 token = ""
@@ -18,9 +15,6 @@ def draw_game(
     invite_token: str = "",
 ):
     global turn_to_play
-    global space_pressed
-    global x_input
-    global y_input
     global sug_x
     global sug_y
     global token
@@ -110,9 +104,7 @@ def draw_game(
             start_x = int((width // 2) - len(goban) + 1)
             draw_goban(stdscr, goban, cursor_x, cursor_y, start_x)
 
-        stdscr.attron(curses.color_pair(3))
-        stdscr.addstr(height - 1, 0, "Press 'q' to exit.")
-        stdscr.attroff(curses.color_pair(3))
+        stdscr.addstr(height - 1, 0, "Press 'q' to exit.", curses.color_pair(3))
 
         cursor_x, cursor_y = tool.get_cursor_pos(key, cursor_x, cursor_y, len(goban))
 
@@ -124,7 +116,7 @@ def draw_game(
             else:
                 grid_x = (mx - start_x) // 2
                 grid_y = my
-            if grid_x < len(goban) and grid_y < len(goban):
+            if grid_x < len(goban) and grid_y < len(goban) and grid_x >= 0 and grid_y >= 0:
                 cursor_x = grid_x
                 cursor_y = grid_y
                 move = send_move(grid_x, grid_y, 1)
@@ -146,46 +138,6 @@ def draw_game(
             local_mode=local_mode,
             turn=turn,
         )
-
-        if key in range(ord("0"), ord("9") + 1):
-            digit = key - ord("0")
-            if not space_pressed:
-                if x_input == -1:
-                    x_input = digit
-                else:
-                    x_input = x_input * 10 + digit
-                    if x_input >= len(goban):
-                        x_input = -1
-            else:
-                if y_input == -1:
-                    y_input = digit
-                else:
-                    y_input = y_input * 10 + digit
-                    if y_input >= len(goban):
-                        y_input = -1
-
-        if not space_pressed and key == ord(" ") and x_input != -1:
-            space_pressed = True
-        elif space_pressed and key == ord(" "):
-            space_pressed = False
-            y_input = -1
-            x_input = -1
-        elif key == ord("\n") and turn_to_play:
-            if space_pressed and y_input != -1:
-                move = send_move(x_input, y_input, 1)
-                if move:
-                    break
-                turn += 1
-            elif cursor_x != -1 and cursor_y != -1:
-                move = send_move(cursor_x, cursor_y, 1)
-                if move:
-                    break
-                turn += 1
-
-        if key == ord("c"):
-            x_input = -1
-            y_input = -1
-            space_pressed = False
 
         if key == ord("h"):
             ret = tool.ai_suggest(token)
@@ -308,19 +260,13 @@ def send_move(x: int, y: int, color: int) -> int | None:
 
     resp = tool.send_move(x, y, color, token)
 
-    global x_input
-    global y_input
     global sug_x
     global sug_y
-    global space_pressed
     global turn_to_play
 
-    x_input = -1
-    y_input = -1
     sug_x = -1
     sug_y = -1
     if resp:
-        space_pressed = False
         turn_to_play = False
         if resp.get("winner") is not None:
             return resp["winner"]
