@@ -201,7 +201,7 @@ func (gs *GameServer) handleSetGame(c *gin.Context) {
 	}
 	gs.gameStarted = true
 	gs.playerOne = generateConnectionToken()
-	if gs.localMode == true {
+	if gs.localMode == true || gs.AIMode == true {
 		gs.playerTwo = ""
 	} else {
 		gs.playerTwo = generateInvitationToken()
