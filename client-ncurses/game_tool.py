@@ -1,7 +1,6 @@
 import curses
 from typing import Any
 import requests  # type: ignore
-import time
 
 URL_BASE = "http://127.0.0.1:8080"
 
@@ -46,14 +45,6 @@ def send_move(x: int, y: int, color: int, token: str) -> dict[str, Any] | None:
     except Exception as e:
         print(f"Error : {e}")
         return None
-
-
-def wait_for_change(old_board: dict[str, Any]):
-    while True:
-        new_board = get_board()
-        if new_board["board"] != old_board["board"]:
-            return new_board
-        time.sleep(0.2)
 
 
 def ai_suggest(token: str) -> dict[str, int] | None:
