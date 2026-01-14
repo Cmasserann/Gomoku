@@ -117,3 +117,11 @@ def handle_token(invite_token: str, ai_mode: bool, local_mode: bool) -> tuple[st
         token = room["player_one"]
         token2 = room["player_two"]
         return token, token2
+    
+def breaking_error(stdscr: curses.window, msg: str) -> None:
+    stdscr.clear()
+    stdscr.addstr(0, 0, f"{msg}")
+    stdscr.addstr(1, 0, "Press any key to exit.")
+    stdscr.refresh()
+    stdscr.getch()
+    return

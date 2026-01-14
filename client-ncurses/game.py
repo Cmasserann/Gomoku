@@ -1,7 +1,6 @@
 import curses
 
 import game_tool as tool
-import menu
 
 turn_to_play = True
 space_pressed = False
@@ -38,16 +37,12 @@ def draw_game(
     token, token2 = tool.handle_token(invite_token, ai_mode, local_mode)
     board = tool.get_board()
     if not token or not board:
-        msg = "Failed to connect to server. Press any key to exit."
+        msg = "Failed to connect to server."
         if token2 == "1":
-            msg = "Invalid invitation token. Press any key to exit."
+            msg = "Invalid invitation token."
         elif token2 == "2":
-            msg = "Failed to create a room. Press any key to exit."
-        stdscr.clear()
-        stdscr.addstr(0, 0, msg)
-        stdscr.getch()
-        stdscr.clear()
-        stdscr.refresh()
+            msg = "Failed to create a room."
+        tool.breaking_error(stdscr, msg)
         return
 
     if ai_mode is True:
@@ -79,15 +74,11 @@ def draw_game(
             board = tool.get_board()
             if not board:
                 stdscr.timeout(-1)
-                stdscr.clear()
-                stdscr.addstr(
-                    0, 0, "Failed to connect to server. Press any key to exit."
+                tool.breaking_error(
+                    stdscr, "Connection lost."
                 )
-                stdscr.getch()
-                stdscr.clear()
-                stdscr.refresh()
-                menu.draw_menu(stdscr)
                 return
+
             if board["goban_free"] is True:
                 if player_2:
                     move = 2 if turn % 2 == 0 else 1
