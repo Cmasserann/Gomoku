@@ -10,6 +10,7 @@ def draw_menu(stdscr: curses.window):
     local_mode = False
     stdscr.clear()
     stdscr.refresh()
+    token = ""
 
     curses.curs_set(0)
 
@@ -64,10 +65,40 @@ def draw_menu(stdscr: curses.window):
         
         if key == ord("l"):
             local_mode = not local_mode
+        
+        if key == ord("j") or (key == ord("\n") and selection == 1):
+            token = draw_join_game(stdscr)
+            if token:
+                game.draw_game(stdscr, AI_mode, local_mode, token)
+                break
+            else:
+                continue
 
     if key == ord("p") or (key == ord("\n") and selection == 0):
         game.draw_game(stdscr, AI_mode, local_mode)
+    if key == ord("j") or (key == ord("\n") and selection == 1):
+        game.draw_game(stdscr, invite_token=token)
 
+
+def draw_join_game(stdscr: curses.window) -> str:
+    curses.echo()
+    stdscr.clear()
+    while True:
+        height, width = stdscr.getmaxyx()
+
+        prompt = "Enter Invitation Token: "
+        x_prompt = int((width // 2) - (len(prompt) // 2) - len(prompt) % 2)
+        y_prompt = int((height // 2))
+
+        if x_prompt < 0 or y_prompt < 0:
+            stdscr.addstr(0, 0, "Terminal too small!", curses.color_pair(2))
+            stdscr.refresh()
+
+        stdscr.addstr(y_prompt, x_prompt, prompt)
+        stdscr.refresh()
+        token = stdscr.getstr(y_prompt, x_prompt + len(prompt), 20).decode("utf-8")
+        curses.noecho()
+        return token
 
 def draw_text(
     stdscr: curses.window,
@@ -172,3 +203,4 @@ def draw_text(
             y_local, x_local + len(local_msg) + 6, "[OFF]", curses.color_pair(3)
         )
     return False
+

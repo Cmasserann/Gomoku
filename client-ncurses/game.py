@@ -31,6 +31,8 @@ def draw_game(
     cursor_y = 0
     big_goban = True
     token2 = ""
+    turn = 1
+    player_2 = False
 
     if invite_token:
         room = tool.join_room(invite_token)
@@ -43,6 +45,9 @@ def draw_game(
             return
         else:
             token = room["token"]
+            board = tool.get_board()
+            turn = board["turn"]
+            player_2 = True
 
     elif not token:
         room = tool.create_room(ai_mode, local_mode)
@@ -85,12 +90,32 @@ def draw_game(
             big_goban = False
 
         if not turn_to_play:
-            new_board = tool.wait_for_change(board)
-            if new_board["board"] != board["board"]:
-                board = new_board
+            board = tool.get_board()
+            if not board:
+                stdscr.timeout(-1)
+                stdscr.clear()
+                stdscr.addstr(
+                    0, 0, "Failed to connect to server. Press any key to exit."
+                )
+                stdscr.getch()
+                stdscr.clear()
+                stdscr.refresh()
+                menu.draw_menu(stdscr)
+                return
+            if turn != board["turn"]:
+                board = tool.get_board()
+                turn = board["turn"]
+        if local_mode:
+            turn_to_play = True
+        else:
+            if turn % 2 == 1 and not player_2:
                 turn_to_play = True
+            elif turn % 2 == 0 and player_2:
+                turn_to_play = True
+            else:
+                turn_to_play = False
 
-        goban: list[list[str]] = board["board"]
+        goban: list[list[int]] = board["board"]
 
         if big_goban:
             start_x = int((width // 2) - (len(goban) * 2) - len(goban) % 2)
@@ -116,7 +141,7 @@ def draw_game(
             if grid_x < len(goban) and grid_y < len(goban):
                 cursor_x = grid_x
                 cursor_y = grid_y
-                send_move(grid_x, grid_y, 1)
+                turn += send_move(grid_x, grid_y, 1)
 
         start_line = len(goban) * 2 if big_goban else len(goban)
         token2 = token2 if not local_mode and not ai_mode else ""
@@ -149,9 +174,9 @@ def draw_game(
             x_input = -1
         elif key == ord("\n") and turn_to_play:
             if space_pressed and y_input != -1:
-                send_move(x_input, y_input, 1)
+                turn += send_move(x_input, y_input, 1)
             elif cursor_x != -1 and cursor_y != -1:
-                send_move(cursor_x, cursor_y, 1)
+                turn += send_move(cursor_x, cursor_y, 1)
 
         if key == ord("c"):
             x_input = -1
@@ -267,7 +292,7 @@ def select_color(x: int, y: int, cursor_x: int, cursor_y: int, value: int) -> in
     return 0
 
 
-def send_move(x: int, y: int, color: int):
+def send_move(x: int, y: int, color: int) -> int:
     global token
 
     resp = tool.send_move(x, y, color, token)
@@ -286,3 +311,4 @@ def send_move(x: int, y: int, color: int):
     if resp:
         space_pressed = False
         turn_to_play = False
+    return 1
