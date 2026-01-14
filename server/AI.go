@@ -11,7 +11,7 @@ type s_ScorePos struct {
 
 var maxDepth = 10
 
-var highestScore = 10000000000
+var highestScore = 100000000000
 
 var pow10 = []int{
 	1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000, 10000000000,
@@ -25,7 +25,7 @@ func getAIMove(table s_table, color uint8) s_StonesPos {
 
 	resultRecurse := RecursiveSearch(maxDepth, table, availableMovesTable, true, color)
 
-	// fmt.Println("IA possible positions:", resultRecurse)
+	// fmt.Println("IA play at:", resultRecurse)
 	return resultRecurse.pos
 }
 
@@ -47,6 +47,9 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 		
 		putStone(&newTable, move.x, move.y, color)
 		capture := capture(&newTable, move.x, move.y, color, color)
+		if len(capture) > 0 {
+			newTable = updateAvailableMovesAfterCapture(newTable, color, capture)
+		}
 
 		if (getCapturedStones(&newTable, color) >= 5) {
 			endDepth = depth
@@ -65,12 +68,14 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 
 
 		if len(capture) > 0 {
-			score += pow10[7] * 2 * len(capture)
+			score += 750 * len(capture)
 		}
 		score += checkAlignement(&newTable, move.x, move.y, color)
 		score += checkAlignement(&newTable, move.x, move.y, opponentColor(color))
 		scoreMove = append(scoreMove, s_ScorePos{pos: move, score: score})
 	}
+
+	// fmt.Println("Depth", depth, "Score Moves:", scoreMove)
 
 	maxScore := -highestScore
 	var bestMove s_ScorePos
@@ -81,13 +86,12 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 		}
 	}
 
-	minScore := highestScore
+	minScore := 0
 	for _, sm := range scoreMove {
 		if (sm.score < minScore) {
 			minScore = sm.score
 		}
 	}
-
 
 	bestMoves := make([]s_ScorePos, 0)
 	// uppurQuartile := maxScore * 75 / 100
@@ -95,7 +99,7 @@ func RecursiveSearch(depth int, table s_table, availableMovesTable s_table, AIMo
 	// fmt.Println("Score Moves at depth", depth, ":", scoreMove)
 	// fmt.Println("Depth", depth, "MaxScore:", maxScore, "MinScore:", minScore, "UppurQuartile:", uppurQuartile)
 	for _, sm := range scoreMove {
-		if (sm.score >= uppurQuartile) {
+		if (sm.score >= uppurQuartile || len(scoreMove) <= 4) {
 			newTable := table
 			putStone(&newTable, bestMove.pos.x, bestMove.pos.y, color)
 			captured := capture(&newTable, bestMove.pos.x, bestMove.pos.y, color, color)
