@@ -58,7 +58,6 @@ func (gs *GameServer) handleInvitation(c *gin.Context) {
 	gs.playerTwo = generateConnectionToken()
 	
 	c.JSON(http.StatusOK, gin.H{
-		"message":    "Invitation accepted",
 		"token": gs.playerTwo,
 	})
 }
@@ -131,7 +130,7 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 		return
 	} else if play == 1 {
 		c.JSON(http.StatusOK, gin.H{
-			"status": "Victoire",
+			"winner": player,
 			"board":  convertGobanTo2D(&gs.goban.cells),
 		})
 		gs.gameStarted = false
@@ -140,7 +139,6 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 		return
 	}
 	
-	fmt.Printf("Coup reçu : Joueur %d en (%d, %d)\n", player, req.X, req.Y)
 	gs.turn += 1
 
 	if gs.AIMode {
@@ -148,7 +146,7 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 		
 		if turn == 1 {
 			c.JSON(http.StatusOK, gin.H{
-				"status": "Victoire de l'IA",
+				"winner": 2,
 				"board":  convertGobanTo2D(&gs.goban.cells),
 				"time μs": time,
 			})
@@ -279,9 +277,18 @@ func (gs *GameServer) handleDebug(c *gin.Context) {
 		gs.playerOne = ""
 		gs.playerTwo = ""
 	} else {
-		setGoban(&gs.goban, req.SplitedGoban)
-		gs.goban.captured_b = req.CaptiredB
-		gs.goban.captured_w = req.CaptiredW
+
+		if len(req.SplitedGoban) == gobanWidth && len(req.SplitedGoban[0]) == gobanWidth {
+			setGoban(&gs.goban, req.SplitedGoban)
+		}
+
+		if req.CaptiredB >= 0 {
+			gs.goban.captured_b = req.CaptiredB
+		}
+		
+		if req.CaptiredW >= 0 {
+			gs.goban.captured_w = req.CaptiredW
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
