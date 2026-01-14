@@ -26,7 +26,7 @@ def draw_game(
     token2 = ""
     turn = 1
     player_2 = False
-    move = None
+    win = None
 
     token, token2 = tool.handle_token(invite_token, ai_mode, local_mode)
     board = tool.get_board()
@@ -46,7 +46,7 @@ def draw_game(
         player_2 = True
 
     while key != ord("q"):
-        move = None
+        win = None
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
@@ -75,14 +75,14 @@ def draw_game(
 
             if board["goban_free"] is True:
                 if player_2:
-                    move = 2 if turn % 2 == 0 else 1
+                    win = 2 if turn % 2 == 0 else 1
                 else:
-                    move = 1 if turn % 2 == 0 else 2
+                    win = 1 if turn % 2 == 0 else 2
                 break
             if turn != board["turn"]:
                 board = tool.get_board()
                 if board["goban_free"] is True:
-                    move = 1 if turn % 2 == 0 else 2
+                    win = 1 if turn % 2 == 0 else 2
                     break
                 turn = board["turn"]
         if local_mode:
@@ -119,8 +119,8 @@ def draw_game(
             if grid_x < len(goban) and grid_y < len(goban) and grid_x >= 0 and grid_y >= 0:
                 cursor_x = grid_x
                 cursor_y = grid_y
-                move = send_move(grid_x, grid_y, 1)
-                if move:
+                win = send_move(grid_x, grid_y, 1)
+                if win:
                     break
                 turn += 1
 
@@ -165,10 +165,10 @@ def draw_game(
 
     stdscr.timeout(-1)
     stdscr.clear()
-    if move is None:
+    if win is None:
         tool.give_up(token)
     else:
-        draw_endGame(stdscr, move)
+        draw_endGame(stdscr, win)
     stdscr.refresh()
 
 
