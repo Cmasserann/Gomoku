@@ -1,13 +1,21 @@
 import curses
 
 import game
+import game_tool as tool
+
+server_online = False
+AI_mode = False
+local_mode = False
 
 
 def draw_menu(stdscr: curses.window):
+    global server_online
+
+    global AI_mode
+    global local_mode
+
     key = 0
     selection = 0
-    AI_mode = False
-    local_mode = False
     stdscr.clear()
     stdscr.refresh()
     token = ""
@@ -53,6 +61,8 @@ def draw_menu(stdscr: curses.window):
             key = stdscr.getch()
             continue
 
+        draw_server_status(stdscr)
+
         stdscr.refresh()
 
         key = stdscr.getch()
@@ -62,11 +72,18 @@ def draw_menu(stdscr: curses.window):
 
         if key == ord("a"):
             AI_mode = not AI_mode
-        
+
         if key == ord("l"):
             local_mode = not local_mode
-        
+
         if key == ord("j") or (key == ord("\n") and selection == 1):
+            if not server_online:
+                stdscr.clear()
+                stdscr.addstr(
+                    0, 0, "Server is offline. Press any key to return to menu."
+                )
+                stdscr.getch()
+                continue
             token = draw_join_game(stdscr)
             if token:
                 game.draw_game(stdscr, AI_mode, local_mode, token)
@@ -75,9 +92,15 @@ def draw_menu(stdscr: curses.window):
                 continue
 
     if key == ord("p") or (key == ord("\n") and selection == 0):
-        game.draw_game(stdscr, AI_mode, local_mode)
-    if key == ord("j") or (key == ord("\n") and selection == 1):
-        game.draw_game(stdscr, invite_token=token)
+        if not server_online:
+            stdscr.clear()
+            stdscr.addstr(0, 0, "Server is offline. Press any key to return to menu.")
+            stdscr.getch()
+        else:
+            game.draw_game(stdscr, AI_mode, local_mode)
+    if key == ord("q") or (key == ord("\n") and selection == 4):
+        return
+    draw_menu(stdscr)
 
 
 def draw_join_game(stdscr: curses.window) -> str:
@@ -99,6 +122,7 @@ def draw_join_game(stdscr: curses.window) -> str:
         token = stdscr.getstr(y_prompt, x_prompt + len(prompt), 20).decode("utf-8")
         curses.noecho()
         return token
+
 
 def draw_text(
     stdscr: curses.window,
@@ -149,58 +173,59 @@ def draw_text(
 
     stdscr.addstr(y_title, x_title, title)
 
-    if selection == 0:
-        stdscr.attron(curses.color_pair(3))
-        stdscr.addstr(y_play, x_play, play_msg)
-        stdscr.attroff(curses.color_pair(3))
-    else:
-        stdscr.addstr(y_play, x_play, play_msg)
+    stdscr.addstr(
+        y_play, x_play, play_msg, curses.color_pair(3 if selection == 0 else 0)
+    )
+    stdscr.addstr(
+        y_join, x_join, join_msg, curses.color_pair(3 if selection == 1 else 0)
+    )
+    stdscr.addstr(
+        y_local, x_local, local_msg, curses.color_pair(3 if selection == 2 else 0)
+    )
+    stdscr.addstr(y_ai, x_ai, ai_msg, curses.color_pair(3 if selection == 3 else 0))
 
-    if selection == 1:
-        stdscr.attron(curses.color_pair(3))
-        stdscr.addstr(y_join, x_join, join_msg)
-        stdscr.attroff(curses.color_pair(3))
-    else:
-        stdscr.addstr(y_join, x_join, join_msg)
+    stdscr.addstr(
+        y_quit, x_quit, quit_msg, curses.color_pair(3 if selection == 4 else 0)
+    )
 
+    stdscr.addstr(
+        y_local,
+        x_local + len(local_msg) + 1,
+        "[ON]",
+        curses.color_pair(3 if local_mode else 0),
+    )
+    stdscr.addstr(
+        y_local,
+        x_local + len(local_msg) + 6,
+        "[OFF]",
+        curses.color_pair(0 if local_mode else 3),
+    )
 
-    if selection == 2:
-        stdscr.attron(curses.color_pair(3))
-        stdscr.addstr(y_local, x_local, local_msg)
-        stdscr.attroff(curses.color_pair(3))
-    else:
-        stdscr.addstr(y_local, x_local, local_msg)
+    stdscr.addstr(
+        y_ai, x_ai + len(ai_msg) + 1, "[ON]", curses.color_pair(3 if AI_mode else 0)
+    )
+    stdscr.addstr(
+        y_ai, x_ai + len(ai_msg) + 6, "[OFF]", curses.color_pair(0 if AI_mode else 3)
+    )
 
-    if selection == 3:
-        stdscr.attron(curses.color_pair(3))
-        stdscr.addstr(y_ai, x_ai, ai_msg)
-        stdscr.attroff(curses.color_pair(3))
-    else:
-        stdscr.addstr(y_ai, x_ai, ai_msg)
-
-    if selection == 4:
-        stdscr.attron(curses.color_pair(3))
-        stdscr.addstr(y_quit, x_quit, quit_msg)
-        stdscr.attroff(curses.color_pair(3))
-    else:
-        stdscr.addstr(y_quit, x_quit, quit_msg)
-
-    if AI_mode:
-        stdscr.addstr(y_ai, x_ai + len(ai_msg) + 1, "[ON]", curses.color_pair(3))
-        stdscr.addstr(y_ai, x_ai + len(ai_msg) + 6, "[OFF]")
-    else:
-        stdscr.addstr(y_ai, x_ai + len(ai_msg) + 1, "[ON]")
-        stdscr.addstr(y_ai, x_ai + len(ai_msg) + 6, "[OFF]", curses.color_pair(3))
-
-    if local_mode:
-        stdscr.addstr(
-            y_local, x_local + len(local_msg) + 1, "[ON]", curses.color_pair(3)
-        )
-        stdscr.addstr(y_local, x_local + len(local_msg) + 6, "[OFF]")
-    else:
-        stdscr.addstr(y_local, x_local + len(local_msg) + 1, "[ON]")
-        stdscr.addstr(
-            y_local, x_local + len(local_msg) + 6, "[OFF]", curses.color_pair(3)
-        )
     return False
 
+
+def draw_server_status(stdscr: curses.window) -> None:
+    global server_online
+
+    status = tool.check_server_online()
+    if status:
+        server_online = True
+    else:
+        server_online = False
+
+    height, width = stdscr.getmaxyx()
+
+    status_msg = "Server Online" if server_online else "Server Offline"
+    status_color = curses.color_pair(1) if server_online else curses.color_pair(2)
+    x_status = width - len(status_msg) - 2
+    y_status = height - 1
+
+    stdscr.addstr(y_status, x_status, status_msg, status_color)
+    stdscr.attroff(status_color)
