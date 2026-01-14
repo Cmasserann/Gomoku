@@ -5,101 +5,240 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"crypto/rand"
+    "encoding/hex"
 	
 	"github.com/gin-gonic/gin"
 )
 
-type MoveRequest struct {
-	X     int `json:"x"`
-	Y     int `json:"y"`
-	Color int `json:"color"` // 1 = Noir, 2 = Blanc
-}
-
-type DebugRequest struct {
-	SplitedGoban [][]int `json:"board"`
-	CaptiredB   int     `json:"captured_b"`
-	CaptiredW   int     `json:"captured_w"`
-	ResetGoban  bool    `json:"reset_board"`
-}
 
 type GameServer struct {
 	mu          sync.Mutex
 	goban       s_table
 	AIMode		bool
-	isBusy      bool
+	localMode	bool
 	gameStarted bool
+	turn		int
+	playerOne	string
+	playerTwo	string
 }
 
-func (gs *GameServer) handlePing(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "pong"})
+
+func setRouter(router *gin.Engine, gs *GameServer) {
+	router.GET("/status", gs.handleStatus)
+	router.GET("/board", gs.handleGetBoard)
+	router.GET("/ai-suggest", gs.handleAISuggest)
+	router.POST("/create", gs.handleSetGame)
+	router.POST("/join", gs.handleInvitation)
+	router.POST("/move", gs.handleMove)
+	router.POST("/giveUp", gs.handleGiveUp)
+	router.POST("/debug", gs.handleDebug)
 }
 
-func (gs *GameServer) handleGetBoard(c *gin.Context) {
+
+func (gs *GameServer) handleInvitation(c *gin.Context) {
+
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
 	
+	var req struct {
+		Token string `json:"token"`
+	}
+	
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid data"})
+		return
+	}
+	
+	if req.Token != gs.playerTwo || len(req.Token) != 4 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		return
+	}
+	
+	gs.playerTwo = generateConnectionToken()
+	
+	c.JSON(http.StatusOK, gin.H{
+		"token": gs.playerTwo,
+	})
+}
+
+
+func (gs *GameServer) handleStatus(c *gin.Context) {
+
+	gs.mu.Lock()
+	if gs.gameStarted {
+		c.JSON(http.StatusOK, gin.H{"goban status": "Locked"})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"goban status": "Free"})
+	}
+	gs.mu.Unlock()
+}
+	
+	
+func (gs *GameServer) handleGetBoard(c *gin.Context) {
+
+	gs.mu.Lock()
 	c.JSON(http.StatusOK, gin.H{
 		"board": convertGobanTo2D(&gs.goban.cells),
+		"captured_b": gs.goban.captured_b,
+		"captured_w": gs.goban.captured_w,
+		"goban_free": !gs.gameStarted,
+		"turn": gs.turn,
 	})
+	gs.mu.Unlock()
 }
+
 
 func (gs *GameServer) handleMove(c *gin.Context) {
-	var req MoveRequest
+	
+	var req struct {
+		X     int `json:"x"`
+		Y     int `json:"y"`
+		Token string `json:"token"`
+	}
+
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Données invalides"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
+		return
+	}
+	
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+	
+	if gs.gameStarted == false {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No game in progress"})
+		return
+	}
+	
+	player := gs.checkToken(req.Token)
+
+	
+	if player == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		fmt.Printf("Invalid token received: %s\n token needed: %s\n", req.Token ,gs.playerOne)
+		return
+	}
+	
+	if gs.localMode == false && player == gs.turn % 2 + 1 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not your turn"})
 		return
 	}
 
-	gs.mu.Lock()
-	defer gs.mu.Unlock()
-
-	turn := playTurn(&gs.goban, req.X, req.Y, uint8(req.Color))
-	if turn == -1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Coup illégal"})
+	play := playTurn(&gs.goban, req.X, req.Y, uint8((gs.turn + 1) % 2 + 1))
+	if play == -1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Illegal move"})
 		return
-	} else if turn == 1 {
-		gs.goban = s_table{
-			size: gobanWidth,
-			captured_b: 0,
-			captured_w: 0,
-		}
+	} else if play == 1 {
 		c.JSON(http.StatusOK, gin.H{
-			"status": "Victoire",
+			"winner": player,
 			"board":  convertGobanTo2D(&gs.goban.cells),
 		})
+		gs.gameStarted = false
+		gs.playerOne = ""
+		gs.playerTwo = ""
 		return
 	}
 	
-	fmt.Printf("Coup reçu : Joueur %d en (%d, %d)\n", req.Color, req.X, req.Y)
-	
-	c.JSON(http.StatusOK, gin.H{
-		"status": "Coup accepté et IA a répondu",
-		"board":  convertGobanTo2D(&gs.goban.cells),
-	})
-	
+	gs.turn += 1
+
 	if gs.AIMode {
-		aiColor := uint8(2)
-		if req.Color == 2 { aiColor = 1 }
-		_, turn = timedAIMove(&gs.goban, aiColor)
+		time, turn := timedAIMove(&gs.goban, 2)
+		
 		if turn == 1 {
-			gs.goban = s_table{
-				size: gobanWidth,
-				captured_b: 0,
-				captured_w: 0,
-			}
 			c.JSON(http.StatusOK, gin.H{
-				"status": "Defaite",
+				"winner": 2,
 				"board":  convertGobanTo2D(&gs.goban.cells),
+				"time μs": time,
 			})
+			gs.gameStarted = false
+			gs.playerOne = ""
+			gs.playerTwo = ""
 			return
 		}
+
+		gs.turn += 1
+		c.JSON(http.StatusOK, gin.H{
+			"board":  convertGobanTo2D(&gs.goban.cells),
+			"turn":	gs.turn,
+			"time μs": time,
+		})
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"board":  convertGobanTo2D(&gs.goban.cells),
+			"turn":	gs.turn,
+		})
 	}
+	
+	
 }
 
-func (gs *GameServer) handleAISuggest(c *gin.Context) {
+
+func (gs *GameServer) handleSetGame(c *gin.Context) {
+
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
 
+	if gs.gameStarted {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Une partie est déjà en cours"})
+		return
+	}
+
+	var req struct {
+		AIMode		bool	`json:"ai_mode"`
+		LocalMode	bool	`json:"local_mode"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Donnée invalide"})
+		return
+	}
+
+	gs.AIMode = req.AIMode
+	if gs.AIMode == true {
+		gs.localMode = false
+	} else {
+		gs.localMode = req.LocalMode
+	}
+	gs.gameStarted = true
+	gs.playerOne = generateConnectionToken()
+	if gs.localMode == true {
+		gs.playerTwo = ""
+	} else {
+		gs.playerTwo = generateInvitationToken()
+	}
+	gs.turn = 1
+	ressetGoban(&gs.goban)
+
+	c.JSON(http.StatusOK, gin.H{
+		"ai_mode":     gs.AIMode,
+		"local_mode":  gs.localMode,
+		"player_one":  gs.playerOne,
+		"player_two":  gs.playerTwo,
+	})
+}
+
+
+func (gs *GameServer) handleAISuggest(c *gin.Context) {
+
+	var req struct {
+		Token string `json:"token"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
+		return
+	}
+
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+
+	player := gs.checkToken(req.Token)
+	
+	if player == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+	
 	time, move := timedAIMoveSuggest(&gs.goban, 1)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -109,15 +248,23 @@ func (gs *GameServer) handleAISuggest(c *gin.Context) {
 	})
 }
 
+
 func (gs *GameServer) handleDebug(c *gin.Context) {
-	gs.mu.Lock()
-	defer gs.mu.Unlock()
 	
-	var req DebugRequest
+	var req struct {
+		SplitedGoban [][]int `json:"board"`
+		CaptiredB   int     `json:"captured_b"`
+		CaptiredW   int     `json:"captured_w"`
+		ResetGoban  bool    `json:"reset_board"`
+	}
+	
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Donnée invalide"})
 		return
 	}
+	
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
 
 	if req.ResetGoban {
 		gs.goban = s_table{
@@ -125,28 +272,76 @@ func (gs *GameServer) handleDebug(c *gin.Context) {
 			captured_b: req.CaptiredB,
 			captured_w: req.CaptiredW,
 		}
+		gs.turn = 1
+		gs.gameStarted = false
+		gs.playerOne = ""
+		gs.playerTwo = ""
 	} else {
-		setGoban(&gs.goban, req.SplitedGoban)
-		gs.goban.captured_b = req.CaptiredB
-		gs.goban.captured_w = req.CaptiredW
+
+		if len(req.SplitedGoban) == gobanWidth && len(req.SplitedGoban[0]) == gobanWidth {
+			setGoban(&gs.goban, req.SplitedGoban)
+		}
+
+		if req.CaptiredB >= 0 {
+			gs.goban.captured_b = req.CaptiredB
+		}
+		
+		if req.CaptiredW >= 0 {
+			gs.goban.captured_w = req.CaptiredW
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Goban mis à jour",
 		"board":   convertGobanTo2D(&gs.goban.cells),
+		"captured_b": gs.goban.captured_b,
+		"captured_w": gs.goban.captured_w,
+		"turn": gs.turn,
+		"token_player_one": gs.playerOne,
+		"token_player_two": gs.playerTwo,
 	})
 }
 
 
-func setRouter(router *gin.Engine, gs *GameServer) {
-	router.GET("/ping", gs.handlePing)
-	router.GET("/board", gs.handleGetBoard)
-	router.GET("/ai-suggest", gs.handleAISuggest)
-	router.POST("/move", gs.handleMove)
-	router.POST("/debug", gs.handleDebug)
+func (gs *GameServer) checkToken(token string) int {
+    if len(token) != 16 { return 0 }
+    if token == gs.playerOne { return 1 }
+    if token == gs.playerTwo { return 2 }
+    return 0
 }
 
+
+func (gs *GameServer) handleGiveUp(c *gin.Context) {
+
+	var req struct {
+		Token string `json:"token"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
+		return
+	}
+
+	gs.mu.Lock()
+	defer gs.mu.Unlock()
+
+	player := gs.checkToken(req.Token)
+	
+	if player == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+		return
+	}
+
+	gs.gameStarted = false
+	gs.turn = 1
+	
+	c.JSON(http.StatusOK, gin.H{
+		"message": fmt.Sprintf("Player %d has given up. Game over.", player),
+	})
+}
+
+
 func setGoban(goban *s_table, newGoban [][]int) {
+
 	for i := 0; i < gobanWidth; i++ {
 		for j := 0; j < gobanWidth; j++ {
 			index := i*gobanWidth + j
@@ -154,6 +349,17 @@ func setGoban(goban *s_table, newGoban [][]int) {
 		}
 	}
 }
+
+
+func ressetGoban(goban *s_table) {
+
+	*goban = s_table{
+		size:       gobanWidth,
+		captured_b: 0,
+		captured_w: 0,
+	}
+}
+
 
 func convertGobanTo2D(goban *[gobanSize]uint8) [][]int {
 
@@ -170,6 +376,7 @@ func convertGobanTo2D(goban *[gobanSize]uint8) [][]int {
 	return board2D
 }
 
+
 func timedAIMove(goban *s_table, color uint8) (int64, int) {
 
 	start := time.Now()
@@ -181,6 +388,7 @@ func timedAIMove(goban *s_table, color uint8) (int64, int) {
 	return elapsed.Microseconds(), turn
 }
 
+
 func timedAIMoveSuggest(goban *s_table, color uint8) (int64, s_StonesPos) {
 
 	start := time.Now()
@@ -189,4 +397,22 @@ func timedAIMoveSuggest(goban *s_table, color uint8) (int64, s_StonesPos) {
 
 	fmt.Printf("AI suggestion computed in %d μs\n", elapsed.Microseconds())
 	return	elapsed.Microseconds(), move
+}
+
+
+func generateConnectionToken() string {
+
+	b := make([]byte, 8)
+    rand.Read(b)
+	fmt.Printf("Generated token: %x\n", b)
+    return hex.EncodeToString(b)
+}
+
+
+func generateInvitationToken() string {
+
+	b := make([]byte, 2)
+    rand.Read(b)
+	fmt.Printf("Generated token: %x\n", b)
+    return hex.EncodeToString(b)
 }

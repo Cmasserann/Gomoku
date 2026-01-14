@@ -12,9 +12,9 @@ def get_board():
         print(f"Connection fail : {e}")
         return None
 
-def send_move(x, y, color):
+def send_move(x, y, token):
 
-    payload = {"x": x, "y": y, "color": color}
+    payload = {"x": x, "y": y, "token": token}
     try:
         response = requests.post(f"{URL_BASE}/move", json=payload)
         if response.status_code != 200:
@@ -45,24 +45,42 @@ def print_board(data):
         print()
 
 def wait_for_change(old_board):
-    print("AI search the best way to kick your ass...")
+    print("AI try hard to play...")
     while True:
         new_board = get_board()
         if new_board['board'] != old_board['board']:
             return new_board
         time.sleep(0.2)
 
+def get_token():
+    settings = {"ai_mode": False, "local_mode": False}
+    try:
+        response = requests.post(f"{URL_BASE}/create", json=settings)
+        if response.status_code == 200:
+            return response.json().get("player_one", "")
+        else:
+            print("Failed to get token.")
+            return ""
+    except Exception as e:
+        print(f"Error getting token: {e}")
+        return ""
 
 def main():
 
     current_board_data = get_board()
-    my_color = 1 
+
+    token = get_token()
+
+    if token:
+        print(f"Rejoindre la partie avec le token : {token}")
+    else:
+        return
 
     while True:
         print_board(current_board_data)
         
         try:
-            line = input(f"\nJoueur {my_color} - Entrez x y ou 'q' pour quitter : ")
+            line = input("\n- Entrez x y ou 'q' pour quitter : ")
             if line.lower() == 'q':
                 break
                 
@@ -72,10 +90,8 @@ def main():
             continue
 
         print(f"Envoi du coup ({x_input}, {y_input})...")
-        board = send_move(x_input, y_input, my_color)
+        current_board_data = send_move(x_input, y_input, token)
 
-        if board:
-            current_board_data = wait_for_change(board)
 
 if __name__ == "__main__":
     main()
