@@ -49,8 +49,11 @@ def draw_game(
         stdscr.clear()
         stdscr.refresh()
         return
-
-    if token2 == "":
+    
+    if ai_mode is True:
+        player_2 = False
+        local_mode = False
+    elif token2 == "":
         player_2 = True
 
     while key != ord("q"):
@@ -358,7 +361,7 @@ def draw_info_panel(
     capt_msg_1 = f" B Capture: {str(captures_B)} "
     capt_msg_2 = f" W Capture: {str(captures_W)} "
     turn_msg = f" Turn: {turn} "
-    invite_msg = f" Code: {invite_token} "
+    invite_msg = f" {invite_token} "
 
     if big_goban:
         start_line += 2
@@ -366,10 +369,13 @@ def draw_info_panel(
         stdscr.addstr(start_line + 1, start_x, "╚")
 
         stdscr.addstr(start_line, start_x + 1, msg)
+        line_length = len(msg) + len(capt_msg_1) + len(capt_msg_2) + len(turn_msg) + 3
+        if invite_token:
+            line_length += len(invite_msg) + 1
         stdscr.addstr(
             start_line + 1,
             start_x + 1,
-            "═" * (len(msg) + len(capt_msg_1) + len(capt_msg_2) + len(turn_msg) + (len(invite_msg) + 1 if invite_token else 0) + 3),
+            "═" * line_length,
         )
 
         start_x += len(msg) + 1
@@ -400,7 +406,7 @@ def draw_info_panel(
         stdscr.addstr(start_line, start_x, "║")
         stdscr.addstr(start_line + 1, start_x, "╝")
 
-        if invite_token:
+        if invite_token :
             stdscr.addstr(start_line + 1, start_x, "╩")
             stdscr.addstr(start_line, start_x + 1, invite_msg)
 
