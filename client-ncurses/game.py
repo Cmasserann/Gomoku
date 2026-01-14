@@ -33,45 +33,23 @@ def draw_game(
     token2 = ""
     turn = 1
     player_2 = False
+    move = None
 
-    if invite_token:
-        room = tool.join_room(invite_token)
-        if not room:
-            stdscr.clear()
-            stdscr.addstr(0, 0, "Failed to join the room. Press any key to exit.")
-            stdscr.getch()
-            stdscr.clear()
-            stdscr.refresh()
-            return
-        else:
-            token = room["token"]
-            board = tool.get_board()
-            turn = board["turn"]
-            player_2 = True
-
-    elif not token:
-        room = tool.create_room(ai_mode, local_mode)
-        if not room:
-            stdscr.clear()
-            stdscr.addstr(0, 0, "Failed to create a room. Press any key to exit.")
-            stdscr.getch()
-            stdscr.clear()
-            stdscr.refresh()
-            return
-        else:
-            token = room["player_one"]
-            token2 = room["player_two"]
-
+    token, token2 = tool.handle_token(invite_token, ai_mode, local_mode)
     board = tool.get_board()
-    if not board:
+    if not token or not board:
         stdscr.clear()
         stdscr.addstr(0, 0, "Failed to connect to server. Press any key to exit.")
         stdscr.getch()
         stdscr.clear()
         stdscr.refresh()
         return
+    
+    if token2 == "":
+        player_2 = True
 
     while key != ord("q"):
+        move = None
         stdscr.clear()
         height, width = stdscr.getmaxyx()
 
@@ -102,8 +80,17 @@ def draw_game(
                 stdscr.refresh()
                 menu.draw_menu(stdscr)
                 return
+            if board["goban_free"] is True:
+                if player_2:
+                    move = 2 if turn % 2 == 0 else 1
+                else:
+                    move = 1 if turn % 2 == 0 else 2
+                break
             if turn != board["turn"]:
                 board = tool.get_board()
+                if board["goban_free"] is True:
+                    move = 1 if turn % 2 == 0 else 2
+                    break
                 turn = board["turn"]
         if local_mode:
             turn_to_play = True
@@ -141,12 +128,15 @@ def draw_game(
             if grid_x < len(goban) and grid_y < len(goban):
                 cursor_x = grid_x
                 cursor_y = grid_y
-                turn += send_move(grid_x, grid_y, 1)
+                move = send_move(grid_x, grid_y, 1)
+                if move:
+                    break
+                turn += 1
 
         start_line = len(goban) * 2 if big_goban else len(goban)
         token2 = token2 if not local_mode and not ai_mode else ""
-        tool.draw_info_panel(
-            stdscr, start_line, start_x, turn_to_play, big_goban, invite_token=token2
+        draw_info_panel(
+            stdscr, start_line, start_x, turn_to_play, big_goban, invite_token=token2, local_mode=local_mode, turn=turn
         )
 
         if key in range(ord("0"), ord("9") + 1):
@@ -174,9 +164,15 @@ def draw_game(
             x_input = -1
         elif key == ord("\n") and turn_to_play:
             if space_pressed and y_input != -1:
-                turn += send_move(x_input, y_input, 1)
+                move = send_move(x_input, y_input, 1)
+                if move:
+                    break
+                turn += 1
             elif cursor_x != -1 and cursor_y != -1:
-                turn += send_move(cursor_x, cursor_y, 1)
+                move = send_move(cursor_x, cursor_y, 1)
+                if move:
+                    break
+                turn += 1
 
         if key == ord("c"):
             x_input = -1
@@ -198,6 +194,10 @@ def draw_game(
         if key == ord("q"):
             break
 
+        if key == ord("t"):
+            tool.debug()
+            board = tool.get_board()
+
         stdscr.refresh()
 
         stdscr.timeout(200)
@@ -205,8 +205,11 @@ def draw_game(
 
     stdscr.timeout(-1)
     stdscr.clear()
+    if move is None:
+        tool.give_up(token)
+    else:
+        draw_endGame(stdscr, move)
     stdscr.refresh()
-    menu.draw_menu(stdscr)
 
 
 def draw_goban(
@@ -292,7 +295,7 @@ def select_color(x: int, y: int, cursor_x: int, cursor_y: int, value: int) -> in
     return 0
 
 
-def send_move(x: int, y: int, color: int) -> int:
+def send_move(x: int, y: int, color: int) -> int | None:
     global token
 
     resp = tool.send_move(x, y, color, token)
@@ -311,4 +314,124 @@ def send_move(x: int, y: int, color: int) -> int:
     if resp:
         space_pressed = False
         turn_to_play = False
-    return 1
+        if resp.get("winner") is not None:
+            return resp["winner"]
+    return None
+
+
+def draw_info_panel(
+    stdscr: curses.window,
+    start_line: int,
+    start_x: int,
+    turn_to_play: bool,
+    big_goban: bool,
+    captures_B: int = 0,
+    captures_W: int = 0,
+    invite_token: str = "",
+    local_mode: bool = False,
+    turn: int = 1,
+):
+    if turn_to_play:
+        msg = " Your turn to play. "
+    else:
+        msg = " Waiting for opponent... "
+    if local_mode:
+        msg = " Player 1's turn to play. " if turn % 2 == 1 else " Player 2's turn to play. "
+    capt_msg_1 = " B Capture: " + str(captures_B) + " "
+    capt_msg_2 = " W Capture: " + str(captures_W) + " "
+    turn_msg = f" Turn: {turn} "
+
+    if big_goban:
+        start_line += 2
+        stdscr.addstr(start_line, start_x, "║")
+        stdscr.addstr(start_line + 1, start_x, "╚")
+
+        stdscr.addstr(start_line, start_x + 1, msg)
+        stdscr.addstr(
+            start_line + 1,
+            start_x + 1,
+            "═" * (len(msg) + len(capt_msg_1) + len(capt_msg_2) + len(turn_msg) + 3),
+        )
+
+        start_x += len(msg) + 1
+        stdscr.addstr(start_line, start_x, "║")
+        stdscr.addstr(start_line - 1, start_x, "╦")
+        stdscr.addstr(start_line + 1, start_x, "╩")
+
+        stdscr.attron(curses.color_pair(1))
+        stdscr.addstr(start_line, start_x + 1, capt_msg_1)
+        stdscr.attron(curses.color_pair(5))
+
+        start_x += len(capt_msg_1) + 1
+        stdscr.addstr(start_line, start_x + 1, capt_msg_2)
+        stdscr.attroff(curses.color_pair(5))
+
+        stdscr.addstr(start_line - 1, start_x, "╦")
+        stdscr.addstr(start_line, start_x, "║")
+        stdscr.addstr(start_line + 1, start_x, "╩")
+
+        start_x += len(capt_msg_2) + 1
+        stdscr.addstr(
+            start_line - 1,
+            start_x,
+            "╦",
+        )
+        stdscr.addstr(
+            start_line, start_x, "║"
+        )
+        stdscr.addstr(
+            start_line + 1,
+            start_x,
+            "╩",
+        )
+
+        stdscr.addstr(start_line, start_x + 1, turn_msg)
+
+        start_x += len(turn_msg) + 1
+        stdscr.addstr(
+            start_line - 1,
+            start_x,
+            "╦",
+        )
+        stdscr.addstr(
+            start_line, start_x, "║"
+        )
+        stdscr.addstr(
+            start_line + 1,
+            start_x,
+            "╝",
+        )
+
+        
+    else:
+        stdscr.addstr(start_line, start_x, msg)
+
+        stdscr.addstr(start_line + 1, start_x, turn_msg)
+
+        stdscr.attron(curses.color_pair(1))
+        stdscr.addstr(start_line + 2, start_x, capt_msg_1)
+        stdscr.attroff(curses.color_pair(1))
+
+        stdscr.attron(curses.color_pair(5))
+        stdscr.addstr(start_line + 3, start_x, capt_msg_2)
+        stdscr.attroff(curses.color_pair(5))
+
+        if invite_token:
+            stdscr.addstr(
+                start_line + 5, start_x, " Invitation Token: " + invite_token + " "
+            )
+
+def draw_endGame(stdscr: curses.window, winner: int):
+    stdscr.clear()
+    height, width = stdscr.getmaxyx()
+
+    message = "The Winner is: {}!".format("Player 1" if winner == 1 else "Player 2")
+
+    x_msg = int((width // 2) - (len(message) // 2) - len(message) % 2)
+    y_msg = int((height // 2))
+
+    stdscr.addstr(y_msg, x_msg, message)
+    stdscr.addstr(y_msg + 2, x_msg, "Press any key to return to menu.")
+
+    stdscr.refresh()
+    stdscr.getch()
