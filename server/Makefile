@@ -26,7 +26,6 @@ clean:
 fclean: clean
 	rm -rf ${BIN_DIR}
 
-
 remake:
 	fclean all
 
@@ -36,4 +35,4 @@ test:
 test_coverage:
 	go test -coverprofile cover.out && go tool cover -html=cover.out -o cover.html
 
-.PHONY: all build build_inspect test run clean
+.PHONY: all build build_inspectrun clean fclean remake test test_coverage $(NAME)
