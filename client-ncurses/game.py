@@ -27,6 +27,8 @@ def draw_game(
     turn = 1
     player_2 = False
     win = None
+    sug_x = -1
+    sug_y = -1
 
     token, token2 = tool.handle_token(invite_token, ai_mode, local_mode)
     board = tool.get_board()

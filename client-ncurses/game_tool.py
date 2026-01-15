@@ -50,7 +50,7 @@ def send_move(x: int, y: int, color: int, token: str) -> dict[str, Any] | None:
 def ai_suggest(token: str) -> dict[str, int] | None:
     payload: dict[str, Any] = {"token": token}
     try:
-        response = requests.get(f"{URL_BASE}/ai-suggest", json=payload)
+        response = requests.post(f"{URL_BASE}/ai-suggest", json=payload)
         if response.status_code != 200:
             return None
         return response.json()
