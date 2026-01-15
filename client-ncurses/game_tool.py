@@ -77,18 +77,6 @@ def give_up(token: str) -> bool:
         print(f"Error : {e}")
         return False
     
-def debug() -> None:
-    payload: dict[str, Any] = {"reset_board": True}
-    try:
-        response = requests.post(f"{URL_BASE}/debug", json=payload)
-        if response.status_code != 200:
-            return
-        return
-    except Exception as e:
-        print(f"Error : {e}")
-        return
-
-
 def get_cursor_pos(
     key: int, cursor_x: int, cursor_y: int, goban_size: int
 ) -> tuple[int, int]:
