@@ -163,10 +163,6 @@ def draw_game(
         if key == ord("q"):
             break
 
-        if key == ord("t"):
-            tool.debug()
-            board = tool.get_board()
-
         stdscr.refresh()
 
         stdscr.timeout(200)
