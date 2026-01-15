@@ -68,9 +68,7 @@ def draw_game(
             board = tool.get_board()
             if not board:
                 stdscr.timeout(-1)
-                tool.breaking_error(
-                    stdscr, "Connection lost."
-                )
+                tool.breaking_error(stdscr, "Connection lost.")
                 return
 
             if board["goban_free"] is True:
@@ -116,7 +114,12 @@ def draw_game(
             else:
                 grid_x = (mx - start_x) // 2
                 grid_y = my
-            if grid_x < len(goban) and grid_y < len(goban) and grid_x >= 0 and grid_y >= 0:
+            if (
+                grid_x < len(goban)
+                and grid_y < len(goban)
+                and grid_x >= 0
+                and grid_y >= 0
+            ):
                 cursor_x = grid_x
                 cursor_y = grid_y
                 win = send_move(grid_x, grid_y, 1)
@@ -138,6 +141,12 @@ def draw_game(
             local_mode=local_mode,
             turn=turn,
         )
+
+        if key == ord("\n") and turn_to_play and cursor_x != -1 and cursor_y != -1:
+            move = send_move(cursor_x, cursor_y, 1)
+            if move:
+                break
+            turn += 1
 
         if key == ord("h"):
             ret = tool.ai_suggest(token)
