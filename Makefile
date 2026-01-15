@@ -9,3 +9,8 @@ doc:
 
 run:
 	go run main.go
+
+ncurses:
+	cd ./client-ncurses && ${MAKE} run
+
+.PHONY: nix build doc run ncurses
