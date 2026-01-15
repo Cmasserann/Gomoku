@@ -72,15 +72,13 @@ def draw_game(
                 return
 
             if board["goban_free"] is True:
-                if player_2:
-                    win = 2 if turn % 2 == 0 else 1
-                else:
-                    win = 1 if turn % 2 == 0 else 2
+                win = 2
                 break
+
             if turn != board["turn"]:
                 board = tool.get_board()
                 if board["goban_free"] is True:
-                    win = 1 if turn % 2 == 0 else 2
+                    win = 2
                     break
                 turn = board["turn"]
         if local_mode:
@@ -143,8 +141,8 @@ def draw_game(
         )
 
         if key == ord("\n") and turn_to_play and cursor_x != -1 and cursor_y != -1:
-            move = send_move(cursor_x, cursor_y, 1)
-            if move:
+            win = send_move(cursor_x, cursor_y, 1)
+            if win:
                 break
             turn += 1
 
@@ -173,7 +171,11 @@ def draw_game(
     if win is None:
         tool.give_up(token)
     else:
-        draw_endGame(stdscr, win)
+        if ai_mode and win == 2:
+            draw_endGame(stdscr, 3)
+        else:
+            win = 2 if turn % 2 == 0 else 1
+            draw_endGame(stdscr, win)
     stdscr.refresh()
 
 
@@ -375,8 +377,8 @@ def draw_endGame(stdscr: curses.window, winner: int):
     stdscr.clear()
     height, width = stdscr.getmaxyx()
 
-    message = "The Winner is: {}!".format("Player 1" if winner == 1 else "Player 2")
-
+    P_win = "Player 1" if winner == 1 else "Player 2" if winner == 2 else "AI"
+    message = f"The Winner is: {P_win}!"
     x_msg = int((width // 2) - (len(message) // 2) - len(message) % 2)
     y_msg = int((height // 2))
 
