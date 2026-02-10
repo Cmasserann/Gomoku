@@ -1,0 +1,61 @@
+.game-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+}
+
+.goban {
+  display: grid;
+  grid-template-columns: repeat(15, 40px);
+  grid-template-rows: repeat(15, 40px);
+  background: #deb887; // Couleur bois
+  border: 2px solid #5d4037;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  padding: 10px;
+}
+
+.cell {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+
+  // Les lignes du plateau
+  .line-v, .line-h {
+    position: absolute;
+    background: #5d4037;
+  }
+  .line-v { width: 1px; height: 100%; left: 50%; }
+  .line-h { height: 1px; width: 100%; top: 50%; }
+
+  &:hover .line-v, &:hover .line-h {
+    background: #000;
+  }
+}
+
+.piece {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+
+  &.black {
+    background: radial-gradient(circle at 30% 30%, #444, #000);
+  }
+  &.white {
+    background: radial-gradient(circle at 30% 30%, #fff, #ccc);
+  }
+}
+
+.game-info {
+  margin-top: 20px;
+  color: white;
+  text-align: center;
+}

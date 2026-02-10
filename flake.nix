@@ -11,6 +11,9 @@
       let
         pkgs = import nixpkgs { inherit system; };
         
+        # Passage à Node 22 pour supporter Angular 21 proprement
+        node = pkgs.nodejs_22;
+
         pythonEnv = pkgs.python3.withPackages (ps: with ps; [
           textual
           requests 
@@ -31,19 +34,30 @@
             pythonEnv
 
             # --- CLIENT WEB (ANGULAR) ---
-            nodejs_20
+            node
             nodePackages.npm 
-            nodePackages."@angular/cli" # <--- LIGNE CORRIGÉE
+            # Note: on ne met pas le CLI ici pour Angular 21, 
+            # on le gère via npm install ou npx pour avoir la version exacte.
           ];
 
           shellHook = ''
+            # 1. Personnalisation du titre du terminal
             echo -ne "\033]0;GOMOKU\007"
+            
+            # 2. Affichage des infos
             echo "🚀 Environnement Gomoku chargé !"
             echo "--------------------------------"
             echo "Backend : $(go version)"
-            echo "Client TUI : Python $(python --version) (Textual inclus)"
-            echo "Client Web : Node $(node --version) + Angular CLI"
+            echo "Client TUI : Python $(python --version)"
+            echo "Client Web : Node $(node --version)"
             echo "--------------------------------"
+
+            # 3. ASTUCE POUR GARDER ZSH / OH MY ZSH
+            # Si on est déjà dans zsh, on ne fait rien pour éviter les boucles infinies.
+            # Sinon, on lance zsh.
+            if [[ $(ps -p $PPID -o comm=) != "zsh" ]]; then
+              exec zsh
+            fi
           '';
         };
       }

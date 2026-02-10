@@ -1,0 +1,51 @@
+<div class="home-container">
+  <header>
+    <h1 class="game-title">
+      @for (letter of letters; track $index) {
+        <span class="char">{{ letter }}</span>
+      }
+    </h1>
+  </header>
+
+  <main class="menu-options">
+    @if (canCreate()) {
+      <button class="menu-btn primary" (click)="startGame('ai')">
+        SOLO VS IA
+      </button>
+      <button class="menu-btn secondary" (click)="startGame('local')">
+        LOCAL MULTIPLAYER
+      </button>
+      <button class="menu-btn outline" (click)="createRoom()">
+        ONLINE MULTIPLAYER
+      </button>
+    }
+
+    @if (canJoin()) {
+      <div class="join-container">
+        <input 
+          type="text" 
+          placeholder="Invitation Code" 
+          maxlength="4"
+          [ngModel]="inviteCode()"
+          (ngModelChange)="inviteCode.set($event.toUpperCase())"
+          class="invite-input"
+        />
+        <button 
+          class="menu-btn join" 
+          [disabled]="inviteCode().length < 4"
+          (click)="joinRoom()">
+          JOIN ROOM
+        </button>
+      </div>
+    }
+
+    @if (isFull()) {
+      <div class="busy-card">
+        <div class="spinner"></div>
+        <p>PARTIE EN COURS</p>
+        <span>Le goban est occupé</span>
+      </div>
+    }
+  </main>
+
+</div>

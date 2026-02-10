@@ -18,13 +18,14 @@ L'API utilise deux types de jetons (tokens) :
 
 `GET /status`
 
-Permet de savoir si une partie est déjà lancée avant d'essayer d'en créer une.
+Permet de savoir si une partie est déjà lancée ou si une invitation est en attente avant d'essayer d'en créer une.
 
 **Réponse (200 OK) :**
 
 ```json
 {
-  "goban_free": true
+  "goban_free": true,
+  "pending_invitation": false
 }
 
 ```

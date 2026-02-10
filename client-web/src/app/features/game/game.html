@@ -1,0 +1,21 @@
+<div class="game-container">
+  <div class="goban">
+    @for (row of grid(); track y; let y = $index) {
+      @for (cell of row; track x; let x = $index) {
+        <div class="cell" (click)="playMove(x, y)">
+          <div class="line-v"></div>
+          <div class="line-h"></div>
+          
+          @if (cell) {
+            <div class="piece" [class.black]="cell === 'black'" [class.white]="cell === 'white'"></div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <div class="game-info">
+    <p>Tour du joueur : <strong>{{ currentPlayer() === 'black' ? 'Noir' : 'Blanc' }}</strong></p>
+    <button class="back-btn" routerLink="/">Retour</button>
+  </div>
+</div>

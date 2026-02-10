@@ -1,0 +1,83 @@
+.home-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
+  color: white;
+  text-align: center;
+}
+
+.game-title {
+  font-size: 10rem;
+  font-family: 'RampartOne', cursive;
+  cursor: default;
+
+  user-select: none; 
+  -webkit-user-select: none;
+
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+
+  .char { 
+    display: inline-block;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: white;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+
+    &:hover {
+      transform: scale(1.8) translateY(-20px) rotate(7deg);
+      color: #e74c3c;
+      text-shadow: 0 0 30px rgba(231, 76, 60, 0.8);
+      z-index: 10;
+    }
+  }
+}
+
+.menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 300px;
+}
+
+.menu-btn {
+  padding: 15px 25px;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  
+  &.primary { background: #e74c3c; color: white; }
+  &.secondary { background: #3498db; color: white; }
+  &.outline { background: transparent; border: 2px solid white; color: white; }
+  
+  &:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+  }
+}
+
+.join-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+}
+
+.invite-input {
+  background: #222;
+  border: 2px solid #444;
+  padding: 12px;
+  color: white;
+  text-align: center;
+  font-size: 1.5rem;
+  border-radius: 4px;
+  outline: none;
+  &:focus { border-color: #e74c3c; }
+}
