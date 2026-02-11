@@ -1,11 +1,11 @@
 import { Component, OnInit, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  // On importe CommonModule au cas où, même si le nouveau @if n'en a pas strictement besoin
   imports: [CommonModule], 
   templateUrl: './home.html',
   styleUrl: './home.scss'
@@ -13,6 +13,8 @@ import { ApiService } from '../../core/services/api';
 export class HomeComponent implements OnInit {
   // 1. Injection du service
   private apiService = inject(ApiService);
+
+  private router = inject(Router);
 
   // 2. Données pour le titre
   title = "五目並べ";
@@ -40,7 +42,15 @@ export class HomeComponent implements OnInit {
 
   // Fonctions pour les boutons (on les remplira après)
   startGame(mode: string) {
-    console.log('Démarrage mode:', mode);
+    if (mode === 'ai') {
+      this.apiService.startAIGame().subscribe({
+        next: (res) => {
+          this.apiService.sessionToken.set(res.session_token);
+          this.router.navigate(['/game']);
+        },
+        error: (err) => alert("Le serveur Go n'a pas pu créer la partie.")
+      });
+    }
   }
 
   createRoom() {
