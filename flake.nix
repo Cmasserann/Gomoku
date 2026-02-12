@@ -34,6 +34,9 @@
             nodejs_20
             nodePackages.npm 
             nodePackages."@angular/cli" # <--- LIGNE CORRIGÉE
+            
+            # --- CLIENT MC (Java)---
+            openjdk21
           ];
 
           shellHook = ''
@@ -43,6 +46,7 @@
             echo "Backend : $(go version)"
             echo "Client TUI : Python $(python --version) (Textual inclus)"
             echo "Client Web : Node $(node --version) + Angular CLI"
+            echo "Client MC : Java $(java -version 2>&1 | head -n 1)"
             echo "--------------------------------"
           '';
         };

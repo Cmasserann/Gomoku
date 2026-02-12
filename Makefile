@@ -22,6 +22,9 @@ ncurses:
 
 re: fclean all
 
+mc-client: 
+	cd ./MC-Client && ${MAKE} build
+
 $(NAME) : all
 
-.PHONY: nix run build all clean fclean ncurses
+.PHONY: nix run build all clean fclean ncurses re mc-client $(NAME)
