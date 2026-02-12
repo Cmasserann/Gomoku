@@ -1,5 +1,7 @@
 NAME := gomoku
 
+all: build run
+
 nix:
 	nix develop --extra-experimental-features "nix-command flakes"
 
@@ -8,8 +10,6 @@ run:
 
 build:
 	cd ./server && ${MAKE} build
-
-all: build run
 
 clean:
 	cd ./server && ${MAKE} clean
