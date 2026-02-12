@@ -16,7 +16,6 @@ public class GobanScreen extends Screen {
 	final static Identifier BLACK_STONE_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/block/blackstone.png");
 	final static Identifier WHITE_STONE_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/block/white_wool.png");
 	final static Identifier EMPTY_CELL_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/block/oak_planks.png");
-	final static Identifier SUGGEST_CELL_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/block/gold_block.png");
 	final static int[] positionTextureX = new int[]{
 			0, 2, 3, 2, 2, 3, 2, 2, 3, 2, 3, 2, 2, 3, 2, 2, 3, 2, 2
 	};
@@ -81,8 +80,6 @@ public class GobanScreen extends Screen {
 					guiGraphics.blit(RenderPipelines.GUI_TEXTURED, BLACK_STONE_TEXTURE, x, y, 0, 0, 10, 10, 16, 16); // Black stone
 				} else if (boardState[row][col] == 2) {
 					guiGraphics.blit(RenderPipelines.GUI_TEXTURED, WHITE_STONE_TEXTURE, x, y, 0,0, 10, 10, 16, 16); // White stone
-				} else {
-//					guiGraphics.blit(RenderPipelines.GUI_TEXTURED, EMPTY_CELL_TEXTURE, x, y, 0,0, 10, 10, 16, 16);
 				}
 			}
 		}
