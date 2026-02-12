@@ -14,20 +14,10 @@
 	"icon": "assets/gomoku/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": [
-			"zaills.gomoku.Gomoku"
-		],
 		"client": [
 			"zaills.gomoku.GomokuClient"
 		]
 	},
-	"mixins": [
-		"gomoku.mixins.json",
-		{
-			"config": "gomoku.client.mixins.json",
-			"environment": "client"
-		}
-	],
 	"depends": {
 		"fabricloader": ">=0.18.4",
 		"minecraft": "~1.21.11",
