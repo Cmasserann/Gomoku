@@ -15,7 +15,7 @@ public class GobanScreen extends Screen {
 	final static Identifier BACKGROUND_TEXTURE = Identifier.fromNamespaceAndPath(GomokuClient.MOD_ID, "textures/gui/goban_hud.png");
 	final static Identifier BLACK_STONE_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/block/blackstone.png");
 	final static Identifier WHITE_STONE_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/block/white_wool.png");
-	final static Identifier EMPTY_CELL_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/block/oak_planks.png");
+	final static Identifier SUGGEST_CELL_TEXTURE = Identifier.fromNamespaceAndPath("minecraft", "textures/block/gold_block.png");
 	final static int[] positionTextureX = new int[]{
 			0, 2, 3, 2, 2, 3, 2, 2, 3, 2, 3, 2, 2, 3, 2, 2, 3, 2, 2
 	};
