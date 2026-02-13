@@ -7,7 +7,7 @@ This project is built using a Client-Server architecture. To play, you must firs
 make nix # Setup the terminal with the software of the version we want
 make gomoku # Launch the server
 ```
-Once the server is running, you can connect via the API (see the [API Documentation](/api.md))
+Once the server is running, you can connect via the API (see the [API Documentation](/API.md))
 
 If you want to use the Ncurses client, run:
 
@@ -53,11 +53,11 @@ The project is coded as a Client-Server application, allowing gameplay via a API
 The API includes an `ai-suggest` endpoint that analyzes the board and recommends the best next move.
 
 ### Remote Play
-You can play on multiplayer, when creating a remote room, it give you a code to invite your friend. (see the api's [docs](/server/api.md))
+You can play on multiplayer, when creating a remote room, it give you a code to invite your friend. (see the [API Docs](/API.md))
 
 ### Local Play
 
-Support for "Hot-seat" multiplayer, allowing two players to play on the same machine (see the [API Docs](/server/api.md))
+Support for "Hot-seat" multiplayer, allowing two players to play on the same machine (see the [API Docs](/API.md))
 
 ### Multiple Client
 
