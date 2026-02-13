@@ -1,56 +1,98 @@
 
-# 💡 API Documentation: Go Game Server
+# API Documentation: Gomoku Game Server (42 Edition)
 
-Cette API gère une instance unique de serveur de jeu de Go. Elle supporte les modes de jeu local, contre l'IA, ou en ligne via un système d'invitation.
+This API manages a single instance of a Gomoku game (Five in a Row) based on the **42 ruleset**, which includes stone captures. It supports local play, AI matches, or online multiplayer via an invitation system.
 
-## 🔑 Système d'Authentification
+## 🔑 Authentication System
 
-L'API utilise deux types de jetons (tokens) :
+The API uses two types of tokens:
 
-1. **Invitation Token (4 chars) :** Généré pour le joueur 2 lors de la création d'une partie multijoueur.
-2. **Session Token (16 chars) :** Utilisé pour authentifier chaque coup (`/move`, `/ai-suggest`).
+1. **Invitation Token (4 chars):** Generated for Player 2 during multiplayer game creation. It is used in the `POST /join` request.
+2. **Session Token (16 chars):** Used to authenticate `POST /move`, `POST /ai-suggest`, and `POST /giveUp` requests.
 
 ---
 
-## 🛰️ État du Serveur
+## Table of Contents
 
-### 1. Vérifier la disponibilité
+* [GET /status](#get-status)
+* [GET /board](#get-board)
+* [POST /create](#post-create)
+* [POST /giveUp](#post-giveup)
+* [POST /join](#post-join)
+* [POST /move](#post-move)
+* [POST /ai-suggest](#post-ai-suggest)
+* [POST /debug](#post-debug)
 
-`GET /status`
+---
 
-Permet de savoir si une partie est déjà lancée avant d'essayer d'en créer une.
+### `GET /status`
 
-**Réponse (200 OK) :**
+Checks if a game is already running or if an invitation is pending before attempting to create a new session.
+
+**Response (200 OK):**
 
 ```json
 {
-  "goban_free": true
+  "goban_free": true,
+  "pending_invitation": false
 }
 
 ```
 
-### 2. Récupérer le plateau
+---
 
-`GET /board`
+### `GET /board`
 
-Renvoie l'état complet de la partie en cours.
+Returns the full state of the current game.
 
-**Réponse (200 OK) :**
+**Response (200 OK):**
 
-* `board`: Matrice 2D d'entiers (0: vide, 1: noir, 2: blanc).
-* `captured_b` / `captured_w`: Nombre de pierres capturées.
-* `turn`: Numéro du tour actuel.
-* `goban_free`: État d'occupation du serveur.
+* `board`: 19x19 matrix of integers (0: empty, 1: black, 2: white).
+* `captured_b` / `captured_w`: Number of stones captured by each player.
+* `turn`: Current turn number.
+* `goban_free`: Server availability status.
+
+```json
+{
+  "board": [
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0 ],
+    [ 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+    [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+  ],
+  "captured_b": 3,
+  "captured_w": 1,
+  "goban_free": false,
+  "turn": 34
+}
+
+```
 
 ---
 
-## 🎮 Gestion des Sessions
+### `POST /create`
 
-### 3. Créer une partie
+Creates a new game session if the server is available.
 
-`POST /create`
+**Request Body:**
 
-**Request Body :**
+* `ai_mode`: (bool) If `true`, `local_mode` is automatically set to `false`.
+* `local_mode`: (bool) Toggle between local (same machine) or online play.
 
 ```json
 {
@@ -60,75 +102,85 @@ Renvoie l'état complet de la partie en cours.
 
 ```
 
-**Réponse (200 OK) :**
+**Response (200 OK):**
 
-* `player_one`: Ton token de session (16 chars).
-* `player_two`: Token d'invitation (4 chars) à donner à un ami, **OU** vide si IA/Local.
+* `player_one`: Your session token (16 chars).
+* `player_two`: Invitation token (4 chars) for your opponent, **OR** empty if AI/Local.
 
-### 4. Abandon de la partie
+```json
+{
+  "ai_mode": false,
+  "local_mode": false,
+  "player_one": "b859573857a65df0",
+  "player_two": "74e7"
+}
 
-`POST /giveUp`
-
-Donne la victoire a l'adversere et libere la partie.
-
-**Request Body :** `{"token": "Ton token de session (16 chars)"}`
-
-**Réponse (200 OK) :**
-
-* `"message": "Game over."`
-
-### 5. Rejoindre une partie
-
-`POST /join`
-
-Échange un code d'invitation contre un token de session.
-
-**Request Body :** `{"token": "a1b2"}`
-
-**Réponse (200 OK) :**
-
-* `token`: Ton token de session définitif (16 chars).
+```
 
 ---
 
-## 🕹️ Gameplay
+### `POST /move`
 
-### 6. Jouer un coup
+Submits a move to the server. If AI mode is active, the AI will respond immediately.
 
-`POST /move`
+**Coordinates:**
 
-Soumet un coup au serveur. Si le mode IA est activé, l'IA répondra immédiatement dans la même requête.
+* The board coordinates start at **(0, 0)** and end at **(18, 18)**.
 
-**Request Body :**
+**Request Body:**
 
 ```json
 {
   "x": 10,
   "y": 5,
-  "token": "ton_token_16_chars"
+  "token": "your_16_char_token"
 }
 
 ```
 
-**Réponses :**
+**Success Response (200 OK):**
 
-* **200 OK :** Renvoie le `board` et le `turn`.
-* Si l'IA a joué : inclut un champ `time_us` (microsecondes).
-* Si la partie est finie : inclut un champ `winner`.
+* `winner`: (Optional) Appears only when the game is over. Returns the player ID (**1** or **2**).
+* `time_us`: Execution time in microseconds (provided when the AI plays).
+
+```json
+{
+  "board": [[...]],
+  "captured_b": 0,
+  "captured_w": 0,
+  "time_us": 22,
+  "turn": 3,
+  "winner": 2
+}
+
+```
+
+**Error Responses:**
+
+* **400 Bad Request:** Move is out of bounds (e.g., 19, 19) or spot is occupied.
+```json
+{ "error": "Illegal move" }
+
+```
 
 
-* **401 Unauthorized :** Token invalide ou mauvais tour.
-* **400 Bad Request :** Coup illégal (règles du Go).
+* **401 Unauthorized:** Invalid token or it's not your turn.
+```json
+{ "error": "Invalid token" }
 
-### 7. Suggestion de l'IA
+```
 
-`POST /ai-suggest`
 
-Demande à l'IA quel serait le meilleur coup sans le jouer.
 
-**Request Body :** `{"token": "..."}`
+---
 
-**Réponse (200 OK) :**
+### `POST /ai-suggest`
+
+Asks the AI for the best move suggestion without executing it.
+
+**Request Body:** `{"token": "your_16_char_token"}`
+
+**Response (200 OK):**
 
 ```json
 {
@@ -141,16 +193,60 @@ Demande à l'IA quel serait le meilleur coup sans le jouer.
 
 ---
 
-## 🛠️ Debug & Administration
+### `POST /giveUp`
 
-### 8. Debug Mode
+Ends the game immediately, grants victory to the opponent, and frees the server.
 
-`POST /debug`
+**Request Body:** `{"token": "your_16_char_token"}`
 
-Permet de modifier l'état interne du serveur pour tester des situations spécifiques.
+**Response (200 OK):**
 
-**Request Body :**
+```json
+{
+  "message": "Game over."
+}
 
-* `board`: (Optionnel) Injecte une matrice 2D.
-* `captured_b` / `captured_w`: (Optionnel) Modifie les scores.
-* `reset_board`: (bool) Si `true`, réinitialise tout et libère le serveur.
+```
+
+---
+
+### `POST /join`
+
+Exchanges a 4-character invitation code for a 16-character session token.
+
+**Request Body:** `{"token": "a1b2"}`
+
+**Response (200 OK):**
+
+```json
+{
+  "token": "5a51beedfede8cbe"
+}
+
+```
+
+---
+
+### `POST /debug`
+
+Modifies the internal server state for testing scenarios.
+
+**Request Body:**
+
+* `reset_board`: (bool) Resets everything and frees the server.
+* `board`: (Optional) Injects a custom 19x19 matrix.
+* `captured_b` / `captured_w`: (Optional) Overrides capture counts.
+
+**Response:** Returns the current board, turn, and both player tokens.
+
+```json
+{
+  "board": [[...]],
+  "captured_b": 0,
+  "captured_w": 0,
+  "token_player_one": "...",
+  "token_player_two": "...",
+  "turn": 1
+}
+
+```

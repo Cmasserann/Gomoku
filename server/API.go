@@ -66,7 +66,10 @@ func (gs *GameServer) handleInvitation(c *gin.Context) {
 func (gs *GameServer) handleStatus(c *gin.Context) {
 
 	gs.mu.Lock()
-	c.JSON(http.StatusOK, gin.H{"goban_free": !gs.gameStarted})
+	c.JSON(http.StatusOK, gin.H{
+		"goban_free": !gs.gameStarted,
+		"pending_invitation": gs.playerTwo != "" && len(gs.playerTwo) == 4,
+	})
 	gs.mu.Unlock()
 }
 	
@@ -156,12 +159,16 @@ func (gs *GameServer) handleMove(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"board":  convertGobanTo2D(&gs.goban.cells),
 			"turn":	gs.turn,
-			"time": time,
+			"time_us": time,
+			"captured_b": gs.goban.captured_b,
+			"captured_w": gs.goban.captured_w,
 		})
 	} else {
 		c.JSON(http.StatusOK, gin.H{
 			"board":  convertGobanTo2D(&gs.goban.cells),
 			"turn":	gs.turn,
+			"captured_b": gs.goban.captured_b,
+			"captured_w": gs.goban.captured_w,
 		})
 	}
 	
